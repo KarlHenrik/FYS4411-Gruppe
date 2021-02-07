@@ -7,9 +7,10 @@ public:
     System();
     System(int seed);
     bool metropolisStep             ();
-    void runMetropolisSteps         (int numberOfMetropolisSteps);
+    void runMetropolisSteps         ();
     void setNumberOfParticles       (int numberOfParticles);
     void setNumberOfDimensions      (int numberOfDimensions);
+    void setNumberOfSteps           (int numberOfSteps);
     void setStepLength              (double stepLength);
     void setEquilibrationFraction   (double equilibrationFraction);
     void setHamiltonian             (class Hamiltonian* hamiltonian);
@@ -20,6 +21,7 @@ public:
     class Sampler*                  getSampler()        { return m_sampler; }
     std::vector<class Particle*>    getParticles()      { return m_particles; }
     class Random*                   getRandomEngine()   { return m_random; }
+    class InitialState*             getInitialState()   { return m_initialState; }
     int getNumberOfParticles()          { return m_numberOfParticles; }
     int getNumberOfDimensions()         { return m_numberOfDimensions; }
     int getNumberOfMetropolisSteps()    { return m_numberOfMetropolisSteps; }

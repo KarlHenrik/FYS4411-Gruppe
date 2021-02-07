@@ -7,8 +7,12 @@
 #include "Hamiltonians/hamiltonian.h"
 #include "WaveFunctions/wavefunction.h"
 
-using std::cout;
-using std::endl;
+#include <string>
+#include <fstream>
+#include <iomanip>
+#include <cstdlib>
+
+using namespace std;
 
 
 Sampler::Sampler(System* system) {
@@ -31,10 +35,30 @@ void Sampler::sample(bool acceptedStep) {
      */
     double localEnergy = m_system->getHamiltonian()->
                          computeLocalEnergy(m_system->getParticles());
-    m_cumulativeEnergy  += localEnergy;
+    m_cumulativeEnergy += localEnergy;
     m_stepNumber++;
 }
 
+void Sampler::computeAverages() {
+    /* Compute the averages of the sampled quantities. You need to think
+     * thoroughly through what is written here currently; is this correct?
+     */
+    m_energy = m_cumulativeEnergy / ( m_system->getNumberOfMetropolisSteps() * (1 - m_system->getEquilibrationFraction()) );
+}
+
+void Sampler::printOutputToTerminal() {
+    int p  = m_system->getWaveFunction()->getNumberOfParameters();
+    std::vector<double> pa = m_system->getWaveFunction()->getParameters();
+
+    for (int i=0; i < p; i++) {
+        cout << left << " " << setw(15) << pa.at(i);
+    }
+    cout << setw(15) << m_energy;
+    cout << setw(15) << "E^2";
+    cout << endl;
+}
+
+/*
 void Sampler::printOutputToTerminal() {
     int     np = m_system->getNumberOfParticles();
     int     nd = m_system->getNumberOfDimensions();
@@ -60,10 +84,4 @@ void Sampler::printOutputToTerminal() {
     cout << " Energy : " << m_energy << endl;
     cout << endl;
 }
-
-void Sampler::computeAverages() {
-    /* Compute the averages of the sampled quantities. You need to think
-     * thoroughly through what is written here currently; is this correct?
-     */
-    m_energy = m_cumulativeEnergy / ( m_system->getNumberOfMetropolisSteps() * (1 - m_system->getEquilibrationFraction()) );
-}
+*/

@@ -38,11 +38,10 @@ bool System::metropolisStep() {
     }
 }
 
-void System::runMetropolisSteps(int numberOfMetropolisSteps) {
+void System::runMetropolisSteps() {
     m_particles                 = m_initialState->getParticles();
     m_sampler                   = new Sampler(this);
-    m_numberOfMetropolisSteps   = numberOfMetropolisSteps;
-    m_sampler->setNumberOfMetropolisSteps(numberOfMetropolisSteps);
+    m_sampler->setNumberOfMetropolisSteps(m_numberOfMetropolisSteps);
     m_waveFunctionValue = m_waveFunction->evaluate(m_particles);
     /* Here you should sample the energy (and maybe other things using
      * the m_sampler instance of the Sampler class. Make sure, though,
@@ -50,11 +49,12 @@ void System::runMetropolisSteps(int numberOfMetropolisSteps) {
      * for a while. You may handle this using the fraction of steps which
      * are equilibration steps; m_equilibrationFraction.
      */
-    int equilibrationSteps = numberOfMetropolisSteps * m_equilibrationFraction;
+
+    int equilibrationSteps = m_numberOfMetropolisSteps * m_equilibrationFraction;
     for (int i = 0; i < equilibrationSteps; i++) {
         metropolisStep();
     }
-    for (int i = equilibrationSteps; i < numberOfMetropolisSteps; i++) {
+    for (int i = equilibrationSteps; i < m_numberOfMetropolisSteps; i++) {
         bool acceptedStep = metropolisStep();
 
         m_sampler->sample(acceptedStep);
@@ -62,6 +62,10 @@ void System::runMetropolisSteps(int numberOfMetropolisSteps) {
 
     m_sampler->computeAverages();
     m_sampler->printOutputToTerminal();
+}
+
+void System::setNumberOfSteps(int numberOfSteps) {
+    m_numberOfMetropolisSteps = numberOfSteps;
 }
 
 void System::setNumberOfParticles(int numberOfParticles) {
