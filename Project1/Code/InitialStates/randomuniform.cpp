@@ -23,11 +23,11 @@ RandomUniform::RandomUniform(System*    system,
      */
     m_system->setNumberOfDimensions(numberOfDimensions);
     m_system->setNumberOfParticles(numberOfParticles);
-    setupInitialState();
 }
 
-void RandomUniform::setupInitialState() {
+std::vector<class Particle*> RandomUniform::newParticles() {
     Random* rng = m_system->getRandomEngine();
+    std::vector<class Particle*> particles;
     for (int i=0; i < m_numberOfParticles; i++) {
         std::vector<double> position = std::vector<double>();
 
@@ -45,8 +45,9 @@ void RandomUniform::setupInitialState() {
              */
             position.push_back(rng->nextDouble());
         }
-        m_particles.push_back(new Particle());
-        m_particles.at(i)->setNumberOfDimensions(m_numberOfDimensions);
-        m_particles.at(i)->setPosition(position);
+        particles.push_back(new Particle());
+        particles.at(i)->setNumberOfDimensions(m_numberOfDimensions);
+        particles.at(i)->setPosition(position);
     }
+    return particles;
 }

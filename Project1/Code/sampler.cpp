@@ -15,35 +15,49 @@
 using namespace std;
 
 
-Sampler::Sampler(System* system) {
+Sampler::Sampler(System* system, int num_threads) {
     m_system = system;
-    m_stepNumber = 0;
+    m_num_threads = num_threads;
+
+    // Setting up vectors with values for all threads
+    for (int i = 0; i < num_threads; i++) {
+        m_localEnergy.push_back(0);
+        m_cumulativeEnergy.push_back(0);
+        m_stepNumber.push_back(0);
+    }
 }
 
 void Sampler::setNumberOfMetropolisSteps(int steps) {
     m_numberOfMetropolisSteps = steps;
 }
 
-void Sampler::sample(bool acceptedStep) {
+void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int thread_num) {
     // Make sure the sampling variable(s) are initialized at the first step.
-    if (m_stepNumber == 0) {
-        m_cumulativeEnergy = 0;
+    if (m_stepNumber.at(thread_num) == 0) {
+        m_cumulativeEnergy.at(thread_num) = 0;
     }
+    // Only calculate and update values when step is accepted, and after equilibration!
+    if (acceptedStep) {
+        m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
+    }
+    m_cumulativeEnergy.at(thread_num) += m_localEnergy.at(thread_num);
+    m_stepNumber.at(thread_num)++;
+}
 
-    /* Here you should sample all the interesting things you want to measure.
-     * Note that there are (way) more than the single one here currently.
-     */
-    double localEnergy = m_system->getHamiltonian()->
-                         computeLocalEnergy(m_system->getParticles());
-    m_cumulativeEnergy += localEnergy;
-    m_stepNumber++;
+void Sampler::updateVals(std::vector<Particle*> particles, int thread_num) {
+    // Updates values after equilibration
+    m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
 }
 
 void Sampler::computeAverages() {
-    /* Compute the averages of the sampled quantities. You need to think
-     * thoroughly through what is written here currently; is this correct?
-     */
-    m_energy = m_cumulativeEnergy / ( m_system->getNumberOfMetropolisSteps() * (1 - m_system->getEquilibrationFraction()) );
+    // Not all steps are sampled, and we need to divide my the number of threads
+    double averageFac = 1.0 / ( m_system->getNumberOfMetropolisSteps() * (1.0 - m_system->getEquilibrationFraction()) * m_num_threads);
+    // Summing values from all threads
+    for (int i = 0; i < m_num_threads; i++) {
+        m_energy += m_cumulativeEnergy.at(i);
+    }
+    // Scaling values to be correct
+    m_energy *= averageFac;
 }
 
 void Sampler::printOutputToTerminal() {

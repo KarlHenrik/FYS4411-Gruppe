@@ -20,11 +20,11 @@ int main() {
         // Seed for the random number generator
         int seed = 2020;
         // Parameters for system
-        int numberOfDimensions  = 1;
+        int numberOfDimensions  = 3;
         int numberOfParticles   = 1;
         int numberOfSteps       = (int) 1e6;
         double omega            = 1.0;          // Oscillator frequency.
-        double alpha            = 0.495;          // Variational parameter.
+        double alpha            = 0.495;        // Variational parameter.
         double stepLength       = 0.1;          // Metropolis step length.
         double equilibration    = 0.1;          // Amount of the total steps used for equilibration.
 
@@ -37,7 +37,7 @@ int main() {
         system->setEquilibrationFraction    (equilibration);
         system->setStepLength               (stepLength);
 
-        // Alpha testing parameters and setup
+        // Alpha testing, parameters and setup
         string fileName = "HO_Gauss_RU.txt";
         double alpha_end = 0.502;
         double alpha_step = 0.001;
@@ -45,30 +45,6 @@ int main() {
         ParamTester* paramTester = new ParamTester(system, fileName);
         paramTester->alphaGrid(alpha, alpha_end, alpha_step);
     }
-
-    /*
-    { // Original main
-        // Seed for the random number generator
-        int seed = 2020;
-
-        int numberOfDimensions  = 1;
-        int numberOfParticles   = 1;
-        int numberOfSteps       = (int) 1e6;
-        double omega            = 1.0;          // Oscillator frequency.
-        double alpha            = 0.5;          // Variational parameter.
-        double stepLength       = 0.1;          // Metropolis step length.
-        double equilibration    = 0.1;          // Amount of the total steps used
-        // for equilibration.
-
-        System* system = new System(seed);
-        system->setHamiltonian              (new HarmonicOscillator(system, omega));
-        system->setWaveFunction             (new SimpleGaussian(system, alpha));
-        system->setInitialState             (new RandomUniform(system, numberOfDimensions, numberOfParticles));
-        system->setEquilibrationFraction    (equilibration);
-        system->setStepLength               (stepLength);
-        system->runMetropolisSteps          (numberOfSteps);
-    }
-    */
 
     return 0;
 }

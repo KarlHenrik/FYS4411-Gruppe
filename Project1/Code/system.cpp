@@ -6,7 +6,10 @@
 #include "Hamiltonians/hamiltonian.h"
 #include "InitialStates/initialstate.h"
 #include "Math/random.h"
+#include "omp.h"
 
+#include <iostream>
+using namespace std;
 
 System::System() {
     m_random = new Random();
@@ -16,21 +19,16 @@ System::System(int seed) {
     m_random = new Random(seed);
 }
 
-bool System::metropolisStep() {
-    /* Perform the actual Metropolis step: Choose a particle at random and
-     * change it's position by a random amount, and check if the step is
-     * accepted by the Metropolis test (compare the wave function evaluated
-     * at this new position with the one at the old position).
-     */
-    Particle* randParticle = m_particles[m_random->nextInt(0, m_numberOfParticles - 1)];
+bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncValue) {
+    Particle* randParticle = particles[m_random->nextInt(0, m_numberOfParticles - 1)];
     std::vector<double> oldPos = randParticle->getPosition();
     double oldLengthSq = randParticle->getLengthSq();
 
     randParticle->adjustPosition(m_stepLength, m_random->nextInt(0, m_numberOfDimensions - 1));
-    double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, m_waveFunctionValue, oldLengthSq);
+    double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
 
-    if (m_random->nextDouble() > std::pow(newWaveFuncValue / m_waveFunctionValue, 2)) {
-        m_waveFunctionValue = newWaveFuncValue;
+    if (m_random->nextDouble() > std::pow(newWaveFuncValue / waveFuncValue, 2)) {
+        waveFuncValue = newWaveFuncValue;
         return true;
     } else {
         randParticle->setPosition(oldPos);
@@ -39,27 +37,29 @@ bool System::metropolisStep() {
 }
 
 void System::runMetropolisSteps() {
-    m_particles                 = m_initialState->getParticles();
-    m_sampler                   = new Sampler(this);
+    int num_threads = 6;
+    omp_set_num_threads(num_threads);
+
+    m_sampler = new Sampler(this, num_threads);
     m_sampler->setNumberOfMetropolisSteps(m_numberOfMetropolisSteps);
-    m_waveFunctionValue = m_waveFunction->evaluate(m_particles);
-    /* Here you should sample the energy (and maybe other things using
-     * the m_sampler instance of the Sampler class. Make sure, though,
-     * to only begin sampling after you have let the system equilibrate
-     * for a while. You may handle this using the fraction of steps which
-     * are equilibration steps; m_equilibrationFraction.
-     */
-
     int equilibrationSteps = m_numberOfMetropolisSteps * m_equilibrationFraction;
-    for (int i = 0; i < equilibrationSteps; i++) {
-        metropolisStep();
+    # pragma omp parallel
+    {
+        // Private variables setup for each thread
+        std::vector<Particle*> private_particles = m_initialState->newParticles();
+        double private_waveFuncValue = m_waveFunction->evaluate(private_particles);
+        int thread_num = omp_get_thread_num();
+        // Equilibration
+        for (int i = 0; i < equilibrationSteps; i++) {
+            metropolisStep(private_particles, private_waveFuncValue);
+        }
+        m_sampler->updateVals(private_particles, thread_num);
+        // Steps with sampling
+        for (int i = equilibrationSteps; i < m_numberOfMetropolisSteps; i++) {
+            bool acceptedStep = metropolisStep(private_particles, private_waveFuncValue);
+            m_sampler->sample(acceptedStep, private_particles, thread_num);
+        }
     }
-    for (int i = equilibrationSteps; i < m_numberOfMetropolisSteps; i++) {
-        bool acceptedStep = metropolisStep();
-
-        m_sampler->sample(acceptedStep);
-    }
-
     m_sampler->computeAverages();
     m_sampler->printOutputToTerminal();
 }

@@ -31,7 +31,6 @@ void ParamTester::alphaGrid(double alpha, double alpha_end, double alpha_step) {
     for (;alpha <= alpha_end + 1e-12; alpha += alpha_step) {
         parameters.at(0) = alpha;
 
-        m_system->getInitialState()->setupInitialState();
         m_system->getWaveFunction()->setParameters(parameters);
         m_system->runMetropolisSteps();
     }
@@ -56,16 +55,9 @@ void ParamTester::printOutputToTerminal() {
     cout << setiosflags(ios::showpoint | ios::uppercase);
     for (int i = 0; i < p; i++) {
         cout << left << " " << setw(15) << "Param " + to_string(i + 1);
-        //cout << "Param" << i + 1 << " : " << pa.at(i) << endl;
     }
     cout << setw(15) << "E";
     cout << setw(15) << "E^2";
     cout << endl;
-
- /*
- ofile << setw(15) << setprecision(8) << E / L2;
- ofile << setw(15) << setprecision(8) << M / L2;
- ofile << setw(15) << setprecision(8) << T << endl;
- */
 
 }
