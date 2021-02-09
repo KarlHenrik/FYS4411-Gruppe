@@ -59,9 +59,9 @@ double SimpleGaussian::computeLocalDoubleDerivative(std::vector<class Particle*>
     double alpha = m_parameters[0];
 
     for (int i = 0; i < particles.size(); i++) {
-        doubleDerivative += particles[i]->getDims() - 2 * alpha * particles[i]->getLengthSq();
+        doubleDerivative += particles[i]->getDims() - 2.0 * alpha * particles[i]->getLengthSq();
     }
-    doubleDerivative *= -2 * alpha;
+    doubleDerivative *= -2.0 * alpha;
 
     return doubleDerivative;
 }

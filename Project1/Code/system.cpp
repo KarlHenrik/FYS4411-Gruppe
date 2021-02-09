@@ -24,10 +24,12 @@ bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncVa
     std::vector<double> oldPos = randParticle->getPosition();
     double oldLengthSq = randParticle->getLengthSq();
 
-    randParticle->adjustPosition(m_stepLength, m_random->nextInt(0, m_numberOfDimensions - 1));
+    double dir = (m_random->nextInt(1) - 0.5) * 2;
+
+    randParticle->adjustPosition(m_stepLength * dir, m_random->nextInt(0, m_numberOfDimensions - 1));
     double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
 
-    if (m_random->nextDouble() > std::pow(newWaveFuncValue / waveFuncValue, 2)) {
+    if (m_random->nextDouble() < std::pow(newWaveFuncValue / waveFuncValue, 2)) {
         waveFuncValue = newWaveFuncValue;
         return true;
     } else {

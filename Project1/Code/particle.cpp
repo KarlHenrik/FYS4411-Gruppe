@@ -1,5 +1,8 @@
 #include "particle.h"
 #include <cassert>
+#include <iostream>
+
+using namespace std;
 
 Particle::Particle() {
 }
