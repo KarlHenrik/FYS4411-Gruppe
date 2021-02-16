@@ -19,9 +19,12 @@ private:
     class System* m_system = nullptr;
     // Calculated each loop
     vector<double> m_localEnergy;
+    vector<double> m_localEnergy2;
     // Cumulative
     vector<double> m_cumulativeEnergy;
+    vector<double> m_cumulativeEnergy2;
     vector<int> m_stepNumber;
     // End values
     double  m_energy = 0;
+    double  m_energy2 = 0;
 };

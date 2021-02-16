@@ -24,7 +24,7 @@ int main() {
         int numberOfParticles   = 1;
         int numberOfSteps       = (int) 1e6;
         double omega            = 1.0;          // Oscillator frequency.
-        double alpha            = 0.45;        // Variational parameter.
+        double alpha            = 0.4;        // Variational parameter.
         double stepLength       = 0.1;          // Metropolis step length.
         double equilibration    = 0.1;          // Amount of the total steps used for equilibration.
 
@@ -39,7 +39,7 @@ int main() {
 
         // Alpha testing, parameters and setup
         string fileName = "HO_Gauss_RU.txt";
-        double alpha_end = 0.55;
+        double alpha_end = 0.6;
         double alpha_step = 0.01;
 
         ParamTester* paramTester = new ParamTester(system, fileName);

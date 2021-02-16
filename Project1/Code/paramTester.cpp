@@ -58,6 +58,7 @@ void ParamTester::printOutputToTerminal() {
     }
     cout << setw(15) << "E";
     cout << setw(15) << "E^2";
+    cout << setw(15) << "VAR";
     cout << endl;
 
 }

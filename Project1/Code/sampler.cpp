@@ -22,7 +22,9 @@ Sampler::Sampler(System* system, int num_threads) {
     // Setting up vectors with values for all threads
     for (int i = 0; i < num_threads; i++) {
         m_localEnergy.push_back(0);
+        m_localEnergy2.push_back(0);
         m_cumulativeEnergy.push_back(0);
+        m_cumulativeEnergy2.push_back(0);
         m_stepNumber.push_back(0);
     }
 }
@@ -35,18 +37,23 @@ void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int th
     // Make sure the sampling variable(s) are initialized at the first step.
     if (m_stepNumber.at(thread_num) == 0) {
         m_cumulativeEnergy.at(thread_num) = 0;
+        m_cumulativeEnergy2.at(thread_num) = 0;
     }
     // Only calculate and update values when step is accepted, and after equilibration!
     if (acceptedStep) {
+
         m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
+        m_localEnergy2.at(thread_num) = m_localEnergy.at(thread_num)*m_localEnergy.at(thread_num);
     }
     m_cumulativeEnergy.at(thread_num) += m_localEnergy.at(thread_num);
+    m_cumulativeEnergy2.at(thread_num) += m_localEnergy2.at(thread_num);
     m_stepNumber.at(thread_num)++;
 }
 
 void Sampler::updateVals(std::vector<Particle*> particles, int thread_num) {
     // Updates values after equilibration
     m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
+    m_localEnergy2.at(thread_num) = m_localEnergy.at(thread_num)*m_localEnergy.at(thread_num);
 }
 
 void Sampler::computeAverages() {
@@ -55,9 +62,11 @@ void Sampler::computeAverages() {
     // Summing values from all threads
     for (int i = 0; i < m_num_threads; i++) {
         m_energy += m_cumulativeEnergy.at(i);
+        m_energy2 += m_cumulativeEnergy2.at(i);
     }
     // Scaling values to be correct
     m_energy *= averageFac;
+    m_energy2 *= averageFac;
 }
 
 void Sampler::printOutputToTerminal() {
@@ -68,7 +77,8 @@ void Sampler::printOutputToTerminal() {
         cout << left << " " << setw(15) << pa.at(i);
     }
     cout << setw(15) << m_energy;
-    cout << setw(15) << "E^2";
+    cout << setw(15) << m_energy2;
+    cout << setw(15) << m_energy2 - (m_energy*m_energy);
     cout << endl;
 }
 
