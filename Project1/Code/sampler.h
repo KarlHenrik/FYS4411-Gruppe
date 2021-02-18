@@ -9,7 +9,7 @@ public:
     void setNumberOfSamples(int steps);
     void sample(bool acceptedStep, std::vector<Particle*> particles, int thread_num);
     void updateVals(std::vector<Particle*> particles, int thread_num);
-    void printOutputToTerminal();
+    string outputText();
     void computeAverages();
     double getEnergy()          { return m_energy; }
 

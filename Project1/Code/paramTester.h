@@ -1,6 +1,6 @@
 #pragma once
+
 #include <string>
-#include <fstream>
 
 using namespace std;
 
@@ -9,7 +9,9 @@ public:
     ParamTester(class System* system, string fileName);
     void alphaGrid(double alpha, double alpha_end, double alpha_step);
     void printOutputToTerminal();
+    void writeOutputToFile();
+    string systemInfo();
 private:
     class System* m_system = nullptr;
-    ofstream m_ofile;
+    string m_fileName;
 };

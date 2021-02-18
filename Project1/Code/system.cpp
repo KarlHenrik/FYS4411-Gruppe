@@ -7,7 +7,7 @@
 #include "InitialStates/initialstate.h"
 #include "Math/random.h"
 #include "omp.h"
-
+#include <string>
 #include <iostream>
 using namespace std;
 
@@ -65,7 +65,11 @@ void System::runMetropolisSteps() {
         }
     }
     m_sampler->computeAverages();
-    m_sampler->printOutputToTerminal();
+    addOutput(m_sampler->outputText());
+}
+
+void System::addOutput(string text) {
+    m_output += text;
 }
 
 void System::setNumberOfSteps(int numberOfSteps) {

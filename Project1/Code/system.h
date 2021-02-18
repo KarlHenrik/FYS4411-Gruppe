@@ -2,6 +2,11 @@
 #include <vector>
 #include <Math/random.h>
 #include "particle.h"
+#include <string>
+#include <fstream>
+#include <iomanip>
+
+using namespace std;
 
 class System {
 public:
@@ -17,6 +22,7 @@ public:
     void setHamiltonian             (class Hamiltonian* hamiltonian);
     void setWaveFunction            (class WaveFunction* waveFunction);
     void setInitialState            (class InitialState* initialState);
+    void addOutput                  (string text);
     class WaveFunction*             getWaveFunction()   { return m_waveFunction; }
     class Hamiltonian*              getHamiltonian()    { return m_hamiltonian; }
     class Sampler*                  getSampler()        { return m_sampler; }
@@ -26,6 +32,7 @@ public:
     int getNumberOfDimensions()         { return m_numberOfDimensions; }
     int getNumberOfMetropolisSteps()    { return m_numberOfMetropolisSteps; }
     double getEquilibrationFraction()   { return m_equilibrationFraction; }
+    string getOutput()                  { return m_output; }
 
 private:
     int                             m_numberOfParticles = 0;
@@ -38,4 +45,5 @@ private:
     class InitialState*             m_initialState = nullptr;
     class Sampler*                  m_sampler = nullptr;
     class Random*                   m_random = nullptr;
+    string                          m_output = "";
 };

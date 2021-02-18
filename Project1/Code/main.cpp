@@ -38,11 +38,10 @@ int main() {
         system->setStepLength               (stepLength);
 
         // Alpha testing, parameters and setup
-        string fileName = "HO_Gauss_RU.txt";
         double alpha_end = 0.6;
         double alpha_step = 0.01;
 
-        ParamTester* paramTester = new ParamTester(system, fileName);
+        ParamTester* paramTester = new ParamTester(system, "HO_Gauss_RU.txt");
         paramTester->alphaGrid(alpha, alpha_end, alpha_step);
     }
 
