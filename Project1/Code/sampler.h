@@ -6,7 +6,7 @@ using namespace std;
 class Sampler {
 public:
     Sampler(class System* system, int num_threads);
-    void setNumberOfMetropolisSteps(int steps);
+    void setNumberOfSamples(int steps);
     void sample(bool acceptedStep, std::vector<Particle*> particles, int thread_num);
     void updateVals(std::vector<Particle*> particles, int thread_num);
     void printOutputToTerminal();
@@ -14,7 +14,7 @@ public:
     double getEnergy()          { return m_energy; }
 
 private:
-    int     m_numberOfMetropolisSteps = 0;
+    int     m_numberOfSamples = 0;
     int     m_num_threads;
     class System* m_system = nullptr;
     // Calculated each loop

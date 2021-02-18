@@ -42,9 +42,11 @@ void System::runMetropolisSteps() {
     int num_threads = 6;
     omp_set_num_threads(num_threads);
 
-    m_sampler = new Sampler(this, num_threads);
-    m_sampler->setNumberOfMetropolisSteps(m_numberOfMetropolisSteps);
     int equilibrationSteps = m_numberOfMetropolisSteps * m_equilibrationFraction;
+    int parallellSteps = (m_numberOfMetropolisSteps - equilibrationSteps) / num_threads + equilibrationSteps;
+
+    m_sampler = new Sampler(this, num_threads);
+    m_sampler->setNumberOfSamples((parallellSteps - equilibrationSteps) * num_threads);
     # pragma omp parallel
     {
         // Private variables setup for each thread
@@ -57,7 +59,7 @@ void System::runMetropolisSteps() {
         }
         m_sampler->updateVals(private_particles, thread_num);
         // Steps with sampling
-        for (int i = equilibrationSteps; i < m_numberOfMetropolisSteps; i++) {
+        for (int i = equilibrationSteps; i < parallellSteps; i++) {
             bool acceptedStep = metropolisStep(private_particles, private_waveFuncValue);
             m_sampler->sample(acceptedStep, private_particles, thread_num);
         }

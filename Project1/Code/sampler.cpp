@@ -29,8 +29,8 @@ Sampler::Sampler(System* system, int num_threads) {
     }
 }
 
-void Sampler::setNumberOfMetropolisSteps(int steps) {
-    m_numberOfMetropolisSteps = steps;
+void Sampler::setNumberOfSamples(int samples) {
+    m_numberOfSamples = samples;
 }
 
 void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int thread_num) {
@@ -58,7 +58,7 @@ void Sampler::updateVals(std::vector<Particle*> particles, int thread_num) {
 
 void Sampler::computeAverages() {
     // Not all steps are sampled, and we need to divide my the number of threads
-    double averageFac = 1.0 / ( m_system->getNumberOfMetropolisSteps() * (1.0 - m_system->getEquilibrationFraction()) * m_num_threads);
+    double averageFac = 1.0 / m_numberOfSamples;
     // Summing values from all threads
     for (int i = 0; i < m_num_threads; i++) {
         m_energy += m_cumulativeEnergy.at(i);
@@ -81,31 +81,3 @@ void Sampler::printOutputToTerminal() {
     cout << setw(15) << m_energy2 - (m_energy*m_energy);
     cout << endl;
 }
-
-/*
-void Sampler::printOutputToTerminal() {
-    int     np = m_system->getNumberOfParticles();
-    int     nd = m_system->getNumberOfDimensions();
-    int     ms = m_system->getNumberOfMetropolisSteps();
-    int     p  = m_system->getWaveFunction()->getNumberOfParameters();
-    double  ef = m_system->getEquilibrationFraction();
-    std::vector<double> pa = m_system->getWaveFunction()->getParameters();
-
-    cout << endl;
-    cout << "  -- System info -- " << endl;
-    cout << " Number of particles  : " << np << endl;
-    cout << " Number of dimensions : " << nd << endl;
-    cout << " Number of Metropolis steps run : 10^" << std::log10(ms) << endl;
-    cout << " Number of equilibration steps  : 10^" << std::log10(std::round(ms*ef)) << endl;
-    cout << endl;
-    cout << "  -- Wave function parameters -- " << endl;
-    cout << " Number of parameters : " << p << endl;
-    for (int i=0; i < p; i++) {
-        cout << " Parameter " << i+1 << " : " << pa.at(i) << endl;
-    }
-    cout << endl;
-    cout << "  -- Results -- " << endl;
-    cout << " Energy : " << m_energy << endl;
-    cout << endl;
-}
-*/

@@ -26,7 +26,7 @@ int main() {
         double omega            = 1.0;          // Oscillator frequency.
         double alpha            = 0.4;        // Variational parameter.
         double stepLength       = 0.1;          // Metropolis step length.
-        double equilibration    = 0.1;          // Amount of the total steps used for equilibration.
+        double equilibration    = 0.375;          // Amount of the total steps used for equilibration.
 
         // System setup
         System* system = new System(seed);
