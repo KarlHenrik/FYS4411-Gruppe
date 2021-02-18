@@ -72,12 +72,12 @@ void Sampler::computeAverages() {
 void Sampler::printOutputToTerminal() {
     int p  = m_system->getWaveFunction()->getNumberOfParameters();
     std::vector<double> pa = m_system->getWaveFunction()->getParameters();
-
+    double var = m_energy2 - (m_energy*m_energy);
     for (int i=0; i < p; i++) {
         cout << left << " " << setw(15) << pa.at(i);
     }
     cout << setw(15) << m_energy;
     cout << setw(15) << m_energy2;
-    cout << setw(15) << m_energy2 - (m_energy*m_energy);
+    cout << setw(15) << var;
     cout << endl;
 }
