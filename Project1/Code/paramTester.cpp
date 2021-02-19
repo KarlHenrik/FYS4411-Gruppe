@@ -45,10 +45,10 @@ void ParamTester::alphaGrid(double alpha, double alpha_end, double alpha_step) {
     }
 
     chrono::high_resolution_clock::time_point stop = chrono::high_resolution_clock::now();
-    chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(start - stop);
-
+    chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(stop - start);
     m_system->addOutput("Execution time: " + to_string(time_span.count()) + "\n");
     cout << endl;
+
     printOutputToTerminal();
     writeOutputToFile();
 }
@@ -86,7 +86,7 @@ string ParamTester::systemInfo() {
     buffer << "  -- Results -- " << endl;
     buffer << setiosflags(ios::showpoint | ios::uppercase);
     for (int i = 0; i < p; i++) {
-        buffer << left << " " << setw(15) << "Param " + to_string(i + 1);
+        buffer << left << " " << setw(15) << "Param_" + to_string(i + 1);
     }
     buffer << setw(15) << "E";
     buffer << setw(15) << "E^2";

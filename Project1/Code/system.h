@@ -11,7 +11,8 @@ using namespace std;
 class System {
 public:
     System();
-    System(int seed);
+    System(int num_threads);
+    System(int num_threads, int seed);
     bool metropolisStep             (std::vector<Particle*> particles, double& waveFuncValue);
     void runMetropolisSteps         ();
     void setNumberOfParticles       (int numberOfParticles);
@@ -26,7 +27,7 @@ public:
     class WaveFunction*             getWaveFunction()   { return m_waveFunction; }
     class Hamiltonian*              getHamiltonian()    { return m_hamiltonian; }
     class Sampler*                  getSampler()        { return m_sampler; }
-    class Random*                   getRandomEngine()   { return m_random; }
+    class Random*                   getRandomEngine();
     class InitialState*             getInitialState()   { return m_initialState; }
     int getNumberOfParticles()          { return m_numberOfParticles; }
     int getNumberOfDimensions()         { return m_numberOfDimensions; }
@@ -35,6 +36,7 @@ public:
     string getOutput()                  { return m_output; }
 
 private:
+    int                             m_num_threads;
     int                             m_numberOfParticles = 0;
     int                             m_numberOfDimensions = 0;
     int                             m_numberOfMetropolisSteps = 0;
@@ -44,6 +46,6 @@ private:
     class Hamiltonian*              m_hamiltonian = nullptr;
     class InitialState*             m_initialState = nullptr;
     class Sampler*                  m_sampler = nullptr;
-    class Random*                   m_random = nullptr;
+    vector<class Random*>           m_randoms;
     string                          m_output = "";
 };

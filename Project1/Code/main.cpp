@@ -29,7 +29,7 @@ int main() {
         double equilibration    = 0.375;          // Amount of the total steps used for equilibration.
 
         // System setup
-        System* system = new System(seed);
+        System* system = new System(6); // no seed usage
         system->setHamiltonian              (new HarmonicOscillator(system, omega));
         system->setWaveFunction             (new SimpleGaussian(system, alpha));
         system->setInitialState             (new RandomUniform(system, numberOfDimensions, numberOfParticles));
