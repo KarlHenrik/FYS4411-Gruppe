@@ -6,6 +6,7 @@ public:
     Particle();
     void setPosition(const std::vector<double> &position);
     void adjustPosition(double change, int dimension);
+    void adjustLangevin(std::vector<double> move);
     void setNumberOfDimensions(int numberOfDimensions);
     std::vector<double> getPosition() { return m_position; }
     double getLengthSq();

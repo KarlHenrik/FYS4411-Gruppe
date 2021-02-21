@@ -19,6 +19,7 @@ public:
     void setNumberOfDimensions      (int numberOfDimensions);
     void setNumberOfSteps           (int numberOfSteps);
     void setStepLength              (double stepLength);
+    void setTimeStep                (double timestep);
     void setEquilibrationFraction   (double equilibrationFraction);
     void setHamiltonian             (class Hamiltonian* hamiltonian);
     void setWaveFunction            (class WaveFunction* waveFunction);
@@ -42,6 +43,7 @@ private:
     int                             m_numberOfMetropolisSteps = 0;
     double                          m_equilibrationFraction = 0.0;
     double                          m_stepLength = 0.1;
+    double                          m_timestep = 0.1;
     class WaveFunction*             m_waveFunction = nullptr;
     class Hamiltonian*              m_hamiltonian = nullptr;
     class InitialState*             m_initialState = nullptr;

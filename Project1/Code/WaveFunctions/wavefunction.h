@@ -12,6 +12,7 @@ public:
     virtual double computeDoubleDerivative(std::vector<class Particle*> particles) = 0;
     virtual double computeLocalDoubleDerivative(std::vector<class Particle*> particles) = 0;
     virtual double evaluateChange(Particle*, double, double) = 0;
+    virtual std::vector<double> ComputeQF(Particle*, std::vector<double>) = 0;
 
 protected:
     int     m_numberOfParameters = 0;

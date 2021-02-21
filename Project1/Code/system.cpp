@@ -39,14 +39,28 @@ System::System(int num_threads, int seed) {
 
 bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncValue) {
     Random* private_random = m_randoms.at(omp_get_thread_num());
-    
+
     Particle* randParticle = particles[private_random->nextInt(0, m_numberOfParticles - 1)];
     std::vector<double> oldPos = randParticle->getPosition();
     double oldLengthSq = randParticle->getLengthSq();
 
-    double dir = (private_random->nextInt(1) - 0.5) * 2;
+    //double dir = (private_random->nextInt(1) - 0.5) * 2;
 
-    randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
+    // Obtaining the vector contaning drift force entries from SimpleGaussian
+    std::vector<double> QuantumForce = m_waveFunction->ComputeQF(randParticle,oldPos);
+    // Declaring a vector to store the change of position in each spatial direction
+    std::vector<double> move(m_numberOfDimensions, 0);
+
+    // Looping over each spatial component to update the positions
+    for (int i = 0; i < m_numberOfDimensions; i++) {
+      move[i] = oldPos[i] + 0.5*m_timestep*QuantumForce[i]
+              + private_random->nextGaussian(0,1)*sqrt(m_timestep);
+    }
+
+    // Changing each component of randParticles position
+    randParticle->adjustLangevin(move);
+
+    //randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
     double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
 
     if (private_random->nextDouble() < std::pow(newWaveFuncValue / waveFuncValue, 2)) {
@@ -104,6 +118,10 @@ void System::setNumberOfDimensions(int numberOfDimensions) {
 void System::setStepLength(double stepLength) {
     assert(stepLength >= 0);
     m_stepLength = stepLength;
+}
+
+void System::setTimeStep(double timestep) {
+  m_timestep = timestep;
 }
 
 void System::setEquilibrationFraction(double equilibrationFraction) {

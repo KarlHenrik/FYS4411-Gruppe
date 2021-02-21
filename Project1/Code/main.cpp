@@ -18,17 +18,19 @@ int main() {
 
     { // Simplest possible system simulation
         // Seed for the random number generator
-        int seed = 2020;
-        // Parameters for system
+        // NOT IN USE ANYMORE ? int seed = 2020;
+
+        // SYSTEM PARAMETERS
         int numberOfDimensions  = 1;
         int numberOfParticles   = 1;
-        int numberOfSteps       = (int) 2e6;
+        int numberOfSteps       = (int) 10e3;
         double omega            = 1.0;          // Oscillator frequency.
         double alpha            = 0.4;        // Variational parameter.
-        double stepLength       = 0.1;          // Metropolis step length.
+        double stepLength       = 0.1;        // Metropolis step length.
+        double timestep         = 0.01;
         double equilibration    = 0.1;          // Amount of the total steps used for equilibration.
 
-        // System setup
+        // SYSTEM SETUP
         System* system = new System(); // no arguments means max number of threads! no seed usage.
         system->setHamiltonian              (new HarmonicOscillator(system, omega));
         system->setWaveFunction             (new SimpleGaussian(system, alpha));
@@ -36,6 +38,7 @@ int main() {
         system->setNumberOfSteps            (numberOfSteps);
         system->setEquilibrationFraction    (equilibration);
         system->setStepLength               (stepLength);
+        system->setTimeStep                 (timestep);
 
         // Alpha testing, parameters and setup
         double alpha_end = 0.6;
