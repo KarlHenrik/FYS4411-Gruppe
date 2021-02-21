@@ -8,6 +8,7 @@
 #include "WaveFunctions/wavefunction.h"
 
 #include <string>
+#include <sstream>
 #include <fstream>
 #include <iomanip>
 #include <cstdlib>
@@ -69,15 +70,19 @@ void Sampler::computeAverages() {
     m_energy2 *= averageFac;
 }
 
-void Sampler::printOutputToTerminal() {
+string Sampler::outputText() {
+    stringstream buffer;
+
     int p  = m_system->getWaveFunction()->getNumberOfParameters();
     std::vector<double> pa = m_system->getWaveFunction()->getParameters();
     double var = m_energy2 - (m_energy*m_energy);
     for (int i=0; i < p; i++) {
-        cout << left << " " << setw(15) << pa.at(i);
+        buffer << left << " " << setw(15) << pa.at(i);
     }
-    cout << setw(15) << m_energy;
-    cout << setw(15) << m_energy2;
-    cout << setw(15) << var;
-    cout << endl;
+    buffer << setw(15) << m_energy;
+    buffer << setw(15) << m_energy2;
+    buffer << setw(15) << m_energy2 - (m_energy*m_energy);
+    buffer << endl;
+
+    return buffer.str();
 }

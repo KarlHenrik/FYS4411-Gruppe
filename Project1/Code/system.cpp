@@ -7,29 +7,49 @@
 #include "InitialStates/initialstate.h"
 #include "Math/random.h"
 #include "omp.h"
-
+#include <string>
 #include <iostream>
 using namespace std;
 
 System::System() {
-    m_random = new Random();
+    m_num_threads = omp_get_max_threads();
+
+    for (int i = 0; i < m_num_threads; i++) {
+        m_randoms.push_back(new Random());
+    }
 }
 
-System::System(int seed) {
-    m_random = new Random(seed);
+System::System(int num_threads) {
+    m_num_threads = num_threads;
+    omp_set_num_threads(num_threads);
+
+    for (int i = 0; i < m_num_threads; i++) {
+        m_randoms.push_back(new Random());
+    }
+}
+
+System::System(int num_threads, int seed) {
+    m_num_threads = num_threads;
+    omp_set_num_threads(num_threads);
+
+    for (int i = 0; i < m_num_threads; i++) {
+        m_randoms.push_back(new Random(seed + i));
+    }
 }
 
 bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncValue) {
-    Particle* randParticle = particles[m_random->nextInt(0, m_numberOfParticles - 1)];
+    Random* private_random = m_randoms.at(omp_get_thread_num());
+    
+    Particle* randParticle = particles[private_random->nextInt(0, m_numberOfParticles - 1)];
     std::vector<double> oldPos = randParticle->getPosition();
     double oldLengthSq = randParticle->getLengthSq();
 
-    double dir = (m_random->nextInt(1) - 0.5) * 2;
+    double dir = (private_random->nextInt(1) - 0.5) * 2;
 
-    randParticle->adjustPosition(m_stepLength * dir, m_random->nextInt(0, m_numberOfDimensions - 1));
+    randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
     double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
 
-    if (m_random->nextDouble() < std::pow(newWaveFuncValue / waveFuncValue, 2)) {
+    if (private_random->nextDouble() < std::pow(newWaveFuncValue / waveFuncValue, 2)) {
         waveFuncValue = newWaveFuncValue;
         return true;
     } else {
@@ -39,14 +59,11 @@ bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncVa
 }
 
 void System::runMetropolisSteps() {
-    int num_threads = 6;
-    omp_set_num_threads(num_threads);
-
     int equilibrationSteps = m_numberOfMetropolisSteps * m_equilibrationFraction;
-    int parallellSteps = (m_numberOfMetropolisSteps - equilibrationSteps) / num_threads + equilibrationSteps;
+    int parallellSteps = (m_numberOfMetropolisSteps - equilibrationSteps) / m_num_threads + equilibrationSteps;
 
-    m_sampler = new Sampler(this, num_threads);
-    m_sampler->setNumberOfSamples((parallellSteps - equilibrationSteps) * num_threads);
+    m_sampler = new Sampler(this, m_num_threads);
+    m_sampler->setNumberOfSamples((parallellSteps - equilibrationSteps) * m_num_threads);
     # pragma omp parallel
     {
         // Private variables setup for each thread
@@ -65,7 +82,11 @@ void System::runMetropolisSteps() {
         }
     }
     m_sampler->computeAverages();
-    m_sampler->printOutputToTerminal();
+    addOutput(m_sampler->outputText());
+}
+
+void System::addOutput(string text) {
+    m_output += text;
 }
 
 void System::setNumberOfSteps(int numberOfSteps) {
@@ -100,4 +121,8 @@ void System::setWaveFunction(WaveFunction* waveFunction) {
 
 void System::setInitialState(InitialState* initialState) {
     m_initialState = initialState;
+}
+
+Random* System::getRandomEngine() {
+    return m_randoms.at(omp_get_thread_num());
 }
