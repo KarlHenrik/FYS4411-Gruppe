@@ -24,7 +24,10 @@ private:
     vector<double> m_cumulativeEnergy;
     vector<double> m_cumulativeEnergy2;
     vector<int> m_stepNumber;
+    vector<int> m_counter;
     // End values
     double  m_energy = 0;
     double  m_energy2 = 0;
+    double m_counts = 0;
+
 };

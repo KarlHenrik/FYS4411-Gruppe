@@ -53,7 +53,7 @@ bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncVa
 
     // Looping over each spatial component to update the positions
     for (int i = 0; i < m_numberOfDimensions; i++) {
-      move[i] = oldPos[i] + 0.5*m_timestep*oldQuantumForce[i]
+      move[i] = 0.5*m_timestep*oldQuantumForce[i]
               + private_random->nextGaussian(0.,1.)*sqrt(m_timestep);
     }
 

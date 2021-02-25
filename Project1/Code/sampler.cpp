@@ -27,6 +27,7 @@ Sampler::Sampler(System* system, int num_threads) {
         m_cumulativeEnergy.push_back(0);
         m_cumulativeEnergy2.push_back(0);
         m_stepNumber.push_back(0);
+        m_counter.push_back(0);
     }
 }
 
@@ -42,7 +43,7 @@ void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int th
     }
     // Only calculate and update values when step is accepted, and after equilibration!
     if (acceptedStep) {
-
+        m_counter.at(thread_num)++;
         m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
         m_localEnergy2.at(thread_num) = m_localEnergy.at(thread_num)*m_localEnergy.at(thread_num);
     }
@@ -64,6 +65,7 @@ void Sampler::computeAverages() {
     for (int i = 0; i < m_num_threads; i++) {
         m_energy += m_cumulativeEnergy.at(i);
         m_energy2 += m_cumulativeEnergy2.at(i);
+        m_counts += m_counter.at(i);
     }
     // Scaling values to be correct
     m_energy *= averageFac;
@@ -81,7 +83,8 @@ string Sampler::outputText() {
     }
     buffer << setw(15) << m_energy;
     buffer << setw(15) << m_energy2;
-    buffer << setw(15) << m_energy2 - (m_energy*m_energy);
+    buffer << setw(15) << var;
+    buffer << setw(15) << m_counts/m_numberOfSamples;
     buffer << endl;
 
     return buffer.str();

@@ -91,6 +91,7 @@ string ParamTester::systemInfo() {
     buffer << setw(15) << "E";
     buffer << setw(15) << "E^2";
     buffer << setw(15) << "VAR";
+    buffer << setw(15) << "% Accepted Transitions";
     buffer << endl;
 
     return buffer.str();

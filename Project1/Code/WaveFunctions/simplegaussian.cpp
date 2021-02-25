@@ -51,13 +51,12 @@ double SimpleGaussian::computeLocalDoubleDerivative(std::vector<class Particle*>
 
 // Computation of the Quantum Force with the special case of a
 // Gaussian trial WF
-std::vector <double> SimpleGaussian::ComputeQF(Particle* randParticle, std::vector<double> oldPos) {
-  std::vector <double> QuantumForce;
+std::vector <double> SimpleGaussian::ComputeQF(Particle* randParticle, std::vector<double> pos) {
+  std::vector <double> QuantumForce(randParticle->getDims(),0);
   double alpha = m_parameters[0];
 
-  QuantumForce = oldPos;
   for (int i = 0; i < randParticle->getDims(); i++) {
-    QuantumForce[i] *= -4*alpha;
+    QuantumForce[i] *= -4*alpha * pos[i];
   }
 
   return QuantumForce;
