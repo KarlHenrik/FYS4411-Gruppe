@@ -47,24 +47,35 @@ bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncVa
     //double dir = (private_random->nextInt(1) - 0.5) * 2;
 
     // Obtaining the vector contaning drift force entries from SimpleGaussian
-    std::vector<double> QuantumForce = m_waveFunction->ComputeQF(randParticle,oldPos);
+    std::vector<double> oldQuantumForce = m_waveFunction->ComputeQF(randParticle,oldPos);
     // Declaring a vector to store the change of position in each spatial direction
     std::vector<double> move(m_numberOfDimensions, 0);
 
     // Looping over each spatial component to update the positions
     for (int i = 0; i < m_numberOfDimensions; i++) {
-      move[i] = oldPos[i] + 0.5*m_timestep*QuantumForce[i]
-              + private_random->nextGaussian(0,1)*sqrt(m_timestep);
+      move[i] = oldPos[i] + 0.5*m_timestep*oldQuantumForce[i]
+              + private_random->nextGaussian(0.,1.)*sqrt(m_timestep);
     }
 
     // Changing each component of randParticles position
     randParticle->adjustLangevin(move);
+    std::vector<double> newPos = randParticle->getPosition();
 
     //randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
     double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
+    std::vector<double> newQuantumForce = m_waveFunction->ComputeQF(randParticle, newPos);
+    double GreensFunctionRatio = 0.0;
 
-    if (private_random->nextDouble() < std::pow(newWaveFuncValue / waveFuncValue, 2)) {
+    for (int i = 0; i < m_numberOfDimensions; i++) {
+      GreensFunctionRatio += (oldQuantumForce[i] + newQuantumForce[i])
+      *(oldPos[i] - newPos[i] + m_timestep*(oldQuantumForce[i] - newQuantumForce[i]));
+    }
+
+    GreensFunctionRatio = exp(0.5*GreensFunctionRatio);
+
+    if (private_random->nextDouble() < GreensFunctionRatio*std::pow(newWaveFuncValue / waveFuncValue, 2)) {
         waveFuncValue = newWaveFuncValue;
+        oldQuantumForce = newQuantumForce;
         return true;
     } else {
         randParticle->setPosition(oldPos);

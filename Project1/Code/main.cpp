@@ -23,11 +23,11 @@ int main() {
         // SYSTEM PARAMETERS
         int numberOfDimensions  = 1;
         int numberOfParticles   = 1;
-        int numberOfSteps       = (int) 10e3;
+        int numberOfSteps       = (int) 1e6;
         double omega            = 1.0;          // Oscillator frequency.
         double alpha            = 0.4;        // Variational parameter.
         double stepLength       = 0.1;        // Metropolis step length.
-        double timestep         = 0.01;
+        double timestep         = 0.9;
         double equilibration    = 0.1;          // Amount of the total steps used for equilibration.
 
         // SYSTEM SETUP
