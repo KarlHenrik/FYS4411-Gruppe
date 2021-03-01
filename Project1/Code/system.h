@@ -13,14 +13,16 @@ public:
     System();
     System(int num_threads);
     System(int num_threads, int seed);
+    bool ImmetropolisStep           (std::vector<Particle*> particles, double& waveFuncValue);
     bool metropolisStep             (std::vector<Particle*> particles, double& waveFuncValue);
-    void runMetropolisSteps         ();
+    void runMetropolisSteps         (bool m_choice);
     void setNumberOfParticles       (int numberOfParticles);
     void setNumberOfDimensions      (int numberOfDimensions);
     void setNumberOfSteps           (int numberOfSteps);
     void setStepLength              (double stepLength);
     void setTimeStep                (double timestep);
     void setEquilibrationFraction   (double equilibrationFraction);
+    void setChoice                  (bool ImpSampling);
     void setHamiltonian             (class Hamiltonian* hamiltonian);
     void setWaveFunction            (class WaveFunction* waveFunction);
     void setInitialState            (class InitialState* initialState);
@@ -35,6 +37,7 @@ public:
     int getNumberOfMetropolisSteps()    { return m_numberOfMetropolisSteps; }
     double getEquilibrationFraction()   { return m_equilibrationFraction; }
     string getOutput()                  { return m_output; }
+    bool getChoice()                    { return m_choice; }
 
 private:
     int                             m_num_threads;
@@ -44,6 +47,7 @@ private:
     double                          m_equilibrationFraction = 0.0;
     double                          m_stepLength = 0.1;
     double                          m_timestep = 0.1;
+    bool                            m_choice;
     class WaveFunction*             m_waveFunction = nullptr;
     class Hamiltonian*              m_hamiltonian = nullptr;
     class InitialState*             m_initialState = nullptr;

@@ -37,7 +37,7 @@ System::System(int num_threads, int seed) {
     }
 }
 
-bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncValue) {
+bool System::ImmetropolisStep(std::vector<Particle*> particles, double& waveFuncValue) {
     Random* private_random = m_randoms.at(omp_get_thread_num());
 
     Particle* randParticle = particles[private_random->nextInt(0, m_numberOfParticles - 1)];
@@ -83,7 +83,28 @@ bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncVa
     }
 }
 
-void System::runMetropolisSteps() {
+bool System::metropolisStep(std::vector<Particle*> particles, double& waveFuncValue) {
+    Random* private_random = m_randoms.at(omp_get_thread_num());
+
+    Particle* randParticle = particles[private_random->nextInt(0, m_numberOfParticles - 1)];
+    std::vector<double> oldPos = randParticle->getPosition();
+    double oldLengthSq = randParticle->getLengthSq();
+
+    double dir = (private_random->nextInt(1) - 0.5) * 2;
+
+    randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
+    double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
+
+    if (private_random->nextDouble() < std::pow(newWaveFuncValue / waveFuncValue, 2)) {
+        waveFuncValue = newWaveFuncValue;
+        return true;
+    } else {
+        randParticle->setPosition(oldPos);
+        return false;
+    }
+}
+
+void System::runMetropolisSteps(bool m_choice) {
     int equilibrationSteps = m_numberOfMetropolisSteps * m_equilibrationFraction;
     int parallellSteps = (m_numberOfMetropolisSteps - equilibrationSteps) / m_num_threads + equilibrationSteps;
 
@@ -97,13 +118,20 @@ void System::runMetropolisSteps() {
         int thread_num = omp_get_thread_num();
         // Equilibration
         for (int i = 0; i < equilibrationSteps; i++) {
-            metropolisStep(private_particles, private_waveFuncValue);
+          if (m_choice == 1) {ImmetropolisStep(private_particles, private_waveFuncValue);}
+          else {metropolisStep(private_particles, private_waveFuncValue);}
         }
         m_sampler->updateVals(private_particles, thread_num);
         // Steps with sampling
         for (int i = equilibrationSteps; i < parallellSteps; i++) {
+          if (m_choice == 1) {
+            bool acceptedStep = ImmetropolisStep(private_particles, private_waveFuncValue);
+            m_sampler->sample(acceptedStep, private_particles, thread_num);
+          }
+          else {
             bool acceptedStep = metropolisStep(private_particles, private_waveFuncValue);
             m_sampler->sample(acceptedStep, private_particles, thread_num);
+          }
         }
     }
     m_sampler->computeAverages();
@@ -134,6 +162,11 @@ void System::setStepLength(double stepLength) {
 void System::setTimeStep(double timestep) {
   m_timestep = timestep;
 }
+
+void System::setChoice(bool ImpSampling) {
+  m_choice = ImpSampling;
+}
+
 
 void System::setEquilibrationFraction(double equilibrationFraction) {
     assert(equilibrationFraction >= 0);

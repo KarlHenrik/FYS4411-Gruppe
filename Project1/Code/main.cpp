@@ -23,12 +23,15 @@ int main() {
         // SYSTEM PARAMETERS
         int numberOfDimensions  = 1;
         int numberOfParticles   = 1;
-        int numberOfSteps       = (int) 1e6;
+        int numberOfSteps       = (int) 1e5;
         double omega            = 1.0;          // Oscillator frequency.
         double alpha            = 0.4;        // Variational parameter.
         double stepLength       = 0.1;        // Metropolis step length.
         double timestep         = 0.01;
         double equilibration    = 0.1;          // Amount of the total steps used for equilibration.
+        bool ImpSampling;
+
+        cout << "Perform importance sampling? [0,1] : "; cin >> ImpSampling;
 
         // SYSTEM SETUP
         System* system = new System(); // no arguments means max number of threads! no seed usage.
@@ -39,6 +42,7 @@ int main() {
         system->setEquilibrationFraction    (equilibration);
         system->setStepLength               (stepLength);
         system->setTimeStep                 (timestep);
+        system->setChoice                   (ImpSampling);
 
         // Alpha testing, parameters and setup
         double alpha_end = 0.6;

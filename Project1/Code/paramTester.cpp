@@ -39,7 +39,7 @@ void ParamTester::alphaGrid(double alpha, double alpha_end, double alpha_step) {
         parameters.at(0) = alpha;
 
         m_system->getWaveFunction()->setParameters(parameters);
-        m_system->runMetropolisSteps();
+        m_system->runMetropolisSteps(m_system->getChoice());
 
         cout << "\r" + to_string(alpha) + " - " + to_string((int) (i++ / n * 100) ) + "%" << flush;
     }
