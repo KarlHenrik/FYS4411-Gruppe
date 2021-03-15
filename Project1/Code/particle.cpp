@@ -12,14 +12,14 @@ void Particle::setPosition(const std::vector<double> &position) {
     m_position = position;
 }
 
-void Particle::adjustPosition(double change, int dimension) {
+void Particle::adjustPosition(double change, int dimension) { // adjust position in one dimension
     m_position.at(dimension) += change;
 }
 
-void Particle::adjustLangevin(std::vector<double> move) {
-  for (int i = 0; i < m_numberOfDimensions; i++) {
-    m_position[i] += move[i];
-  }
+void Particle::adjustLangevin(std::vector<double> move) { // adjust position by a vector
+    for (int i = 0; i < m_numberOfDimensions; i++) {
+        m_position[i] += move[i];
+    }
 }
 
 void Particle::setNumberOfDimensions(int numberOfDimensions) {

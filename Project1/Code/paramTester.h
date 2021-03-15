@@ -8,8 +8,9 @@ class ParamTester {
 public:
     ParamTester(class System* system, string fileName);
     void alphaGrid(double alpha, double alpha_end, double alpha_step);
+    double alphaGD(double alpha, double lr, double tol, int max_iter);
     void printOutputToTerminal();
-    void writeOutputToFile();
+    void writeOutputToFile(string ending);
     string systemInfo();
 private:
     class System* m_system = nullptr;

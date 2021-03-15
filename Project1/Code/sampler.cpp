@@ -1,17 +1,17 @@
-#include <iostream>
-#include <cmath>
-#include <vector>
 #include "sampler.h"
 #include "system.h"
 #include "particle.h"
 #include "Hamiltonians/hamiltonian.h"
 #include "WaveFunctions/wavefunction.h"
 
+#include <cmath>
+#include <vector>
+
 #include <string>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
-#include <cstdlib>
+#include <iostream>
 
 using namespace std;
 
@@ -22,54 +22,60 @@ Sampler::Sampler(System* system, int num_threads) {
 
     // Setting up vectors with values for all threads
     for (int i = 0; i < num_threads; i++) {
-        m_localEnergy.push_back(0);
-        m_localEnergy2.push_back(0);
-        m_cumulativeEnergy.push_back(0);
-        m_cumulativeEnergy2.push_back(0);
-        m_stepNumber.push_back(0);
         m_counter.push_back(0);
-    }
-}
 
-void Sampler::setNumberOfSamples(int samples) {
-    m_numberOfSamples = samples;
+        m_energy.push_back(0);
+        m_energy2.push_back(0);
+        m_dPsi.push_back(0);
+
+        m_total_energy.push_back(0);
+        m_total_energy2.push_back(0);
+        m_total_dPsi.push_back(0);
+        m_total_dPsiEL.push_back(0);
+    }
 }
 
 void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int thread_num) {
-    // Make sure the sampling variable(s) are initialized at the first step.
-    if (m_stepNumber.at(thread_num) == 0) {
-        m_cumulativeEnergy.at(thread_num) = 0;
-        m_cumulativeEnergy2.at(thread_num) = 0;
-    }
     // Only calculate and update values when step is accepted, and after equilibration!
     if (acceptedStep) {
         m_counter.at(thread_num)++;
-        m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
-        m_localEnergy2.at(thread_num) = m_localEnergy.at(thread_num)*m_localEnergy.at(thread_num);
+
+        m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+        m_energy2.at(thread_num) = m_energy.at(thread_num) * m_energy.at(thread_num);
+        m_dPsi.at(thread_num) = m_system->getWaveFunction()->computeParamDer(particles);
     }
-    m_cumulativeEnergy.at(thread_num) += m_localEnergy.at(thread_num);
-    m_cumulativeEnergy2.at(thread_num) += m_localEnergy2.at(thread_num);
-    m_stepNumber.at(thread_num)++;
+    m_total_energy.at(thread_num) += m_energy.at(thread_num);
+    m_total_energy2.at(thread_num) += m_energy2.at(thread_num);
+    m_total_dPsi.at(thread_num) += m_dPsi.at(thread_num);
+    m_total_dPsiEL.at(thread_num) += m_dPsi.at(thread_num) * m_energy.at(thread_num);
 }
 
 void Sampler::updateVals(std::vector<Particle*> particles, int thread_num) {
     // Updates values after equilibration
-    m_localEnergy.at(thread_num) = m_system->getHamiltonian()->computeLocalEnergy(particles);
-    m_localEnergy2.at(thread_num) = m_localEnergy.at(thread_num)*m_localEnergy.at(thread_num);
+    m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+    m_energy2.at(thread_num) = m_energy.at(thread_num) * m_energy.at(thread_num);
+    m_dPsi.at(thread_num) = m_system->getWaveFunction()->computeParamDer(particles);
 }
 
 void Sampler::computeAverages() {
     // Not all steps are sampled, and we need to divide my the number of threads
-    double averageFac = 1.0 / m_numberOfSamples;
+    double averageFac = 1.0 / m_system->getMetroSteps();
     // Summing values from all threads
     for (int i = 0; i < m_num_threads; i++) {
-        m_energy += m_cumulativeEnergy.at(i);
-        m_energy2 += m_cumulativeEnergy2.at(i);
         m_counts += m_counter.at(i);
+
+        m_energy_EV += m_total_energy.at(i);
+        m_energy2_EV += m_total_energy2.at(i);
+        m_dPsi_EV += m_total_dPsi.at(i);
+        m_dPsiEL_EV += m_total_dPsiEL.at(i);
     }
     // Scaling values to be correct
-    m_energy *= averageFac;
-    m_energy2 *= averageFac;
+    m_energy_EV *= averageFac;
+    m_energy2_EV *= averageFac;
+    m_dPsi_EV *= averageFac;
+    m_dPsiEL_EV *= averageFac;
+    // Calculating derivative of wave function wrt. variational parameter
+    m_dEnergy = 2 * (m_dPsiEL_EV - m_dPsi_EV * m_energy_EV);
 }
 
 string Sampler::outputText() {
@@ -77,14 +83,14 @@ string Sampler::outputText() {
 
     int p  = m_system->getWaveFunction()->getNumberOfParameters();
     std::vector<double> pa = m_system->getWaveFunction()->getParameters();
-    double var = m_energy2 - (m_energy*m_energy);
+    double var = m_energy2_EV - (m_energy_EV * m_energy_EV);
     for (int i=0; i < p; i++) {
         buffer << left << " " << setw(15) << pa.at(i);
     }
-    buffer << setw(15) << m_energy;
-    buffer << setw(15) << m_energy2;
+    buffer << setw(15) << m_energy_EV;
+    buffer << setw(15) << m_energy2_EV;
     buffer << setw(15) << var;
-    buffer << setw(15) << m_counts/m_numberOfSamples;
+    buffer << setw(15) << m_counts / m_system->getMetroSteps();
     buffer << endl;
 
     return buffer.str();

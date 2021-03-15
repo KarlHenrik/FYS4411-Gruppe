@@ -9,4 +9,5 @@ public:
     double computeLocalDoubleDerivative(std::vector<class Particle*> particles);
     std::vector<double> ComputeQF(Particle*, std::vector<double>);
     double evaluateChange(Particle*, double, double);
+    double computeParamDer(std::vector<Particle*> particles);
 };

@@ -5,6 +5,8 @@
 #include "../system.h"
 #include "../particle.h"
 
+#include <iostream>
+
 using namespace std;
 
 SimpleGaussian::SimpleGaussian(System* system, double alpha) :
@@ -49,15 +51,24 @@ double SimpleGaussian::computeLocalDoubleDerivative(std::vector<class Particle*>
     return doubleDerivative;
 }
 
-// Computation of the Quantum Force with the special case of a
-// Gaussian trial WF
-std::vector <double> SimpleGaussian::ComputeQF(Particle* randParticle, std::vector<double> pos) {
-  std::vector <double> QuantumForce(randParticle->getDims(),0);
-  double alpha = m_parameters[0];
+// Computation of the Quantum Force with the special case of a Gaussian trial WF
+std::vector <double> SimpleGaussian::ComputeQF(Particle* randParticle, std::vector<double> oldPos) {
+    std::vector <double> QuantumForce(randParticle->getDims(), 0);
+    double alpha = m_parameters[0];
 
-  for (int i = 0; i < randParticle->getDims(); i++) {
-    QuantumForce[i] *= -4*alpha * pos[i];
-  }
+    for (int i = 0; i < randParticle->getDims(); i++) {
+        QuantumForce[i] = -4 * alpha * oldPos[i];
+    }
 
-  return QuantumForce;
+    return QuantumForce;
+}
+
+
+double SimpleGaussian::computeParamDer(std::vector<Particle*> particles) {
+    // Only works for this very specific problem!
+    double der = 0;
+    for (int i = 0; i < (int) particles.size(); i++) {
+        der += particles[i]->getLengthSq();
+    }
+    return der;
 }
