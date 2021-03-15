@@ -45,11 +45,10 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
         alpha = alpha + sampler->getParamDer() * lr;
         iter++;
     }
-
+    cout << endl;
     chrono::high_resolution_clock::time_point stop = chrono::high_resolution_clock::now();
     chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(stop - start);
-    m_system->addOutput("Execution time: " + to_string(time_span.count()) + "\n");
-    cout << endl;
+    m_system->addOutput("Execution time: " + to_string(time_span.count()) + "\n\n");
 
     printOutputToTerminal();
     writeOutputToFile("_GD");
@@ -57,11 +56,28 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
     return alpha;
 }
 
-/*
-void ParamTester::bigCalc(double alpha, ) {
 
+void ParamTester::bigCalc(double alpha) {
+    vector<double> parameters {0};
+
+    cout << "Running large scale calculation for alpha = " + to_string(alpha) << endl;
+
+    chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
+    // looping through the alphas of interest
+    m_system->setSampler(new SavingSampler(m_system, m_system->getNumerOfThreads()));
+    parameters.at(0) = alpha;
+
+    m_system->getWaveFunction()->setParameters(parameters);
+    m_system->runMetropolisSteps(m_system->getChoice());
+
+    chrono::high_resolution_clock::time_point stop = chrono::high_resolution_clock::now();
+    chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(stop - start);
+    cout << "Execution time: " + to_string(time_span.count()) + "\n\n" << endl;
+
+    writeOutputToFile("_Big");
+    m_system->clearOutput();
 }
-*/
+
 
 // alphaGrid is used for finding finding decent expected values for a range of alphas, not for a proper calculation or search
 void ParamTester::alphaGrid(double alpha, double alpha_end, double alpha_step) {
@@ -83,11 +99,10 @@ void ParamTester::alphaGrid(double alpha, double alpha_end, double alpha_step) {
 
         cout << "\r" + to_string(alpha) + " - " + to_string((int) (i++ / n * 100) ) + "%" << flush;
     }
-
+    cout << endl;
     chrono::high_resolution_clock::time_point stop = chrono::high_resolution_clock::now();
     chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(stop - start);
-    m_system->addOutput("Execution time: " + to_string(time_span.count()) + "\n");
-    cout << endl;
+    m_system->addOutput("Execution time: " + to_string(time_span.count()) + "\n\n");
 
     printOutputToTerminal();
     writeOutputToFile("_Grid");

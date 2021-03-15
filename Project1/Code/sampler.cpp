@@ -95,3 +95,42 @@ string Sampler::outputText() {
 
     return buffer.str();
 }
+
+// ------------- SavingSampler functions -----------------
+
+SavingSampler::SavingSampler(System* system, int num_threads) : Sampler(system, num_threads) {
+    m_arr_energy = new double[system->getMetroSteps()];
+    m_paralellSize = (int) system->getMetroSteps() / num_threads;
+
+    // Setting up vectors with values for all threads
+    for (int i = 0; i < num_threads; i++) {
+        m_step.push_back(0);
+    }
+}
+
+void SavingSampler::sample(bool acceptedStep, vector<Particle*> particles, int thread_num) {
+    // Only calculate and update values when step is accepted, and after equilibration!
+    if (acceptedStep) {
+        m_counter.at(thread_num)++;
+        m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+    }
+    m_total_energy.at(thread_num) += m_energy.at(thread_num);
+
+    m_step.at(thread_num)++;
+    m_arr_energy[m_paralellSize * thread_num + m_step.at(thread_num) - 1] = m_total_energy.at(thread_num) / m_step.at(thread_num);
+}
+
+void SavingSampler::updateVals(vector<Particle*> particles, int thread_num) {
+    m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+}
+
+string SavingSampler::outputText() {
+    stringstream buffer;
+    for (int i = 0; i < m_system->getMetroSteps(); i++) {
+        buffer << setw(15) << m_arr_energy[i] << endl;
+    }
+    return buffer.str();
+}
+void SavingSampler::computeAverages() {
+    return;
+}

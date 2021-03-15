@@ -136,7 +136,7 @@ void System::clearOutput() {
 // ----------------- Setters and getters ----------------------
 
 void System::setNumberOfSteps(int metroSteps, int equiSteps) {
-    m_metroSteps = metroSteps;
+    m_metroSteps = metroSteps - (int) remainder(metroSteps, m_num_threads);
     m_equiSteps = equiSteps;
 }
 

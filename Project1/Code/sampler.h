@@ -8,13 +8,13 @@ using namespace std;
 class Sampler {
 public:
     Sampler(class System* system, int num_threads);
-    void sample(bool acceptedStep, vector<Particle*> particles, int thread_num);
-    void updateVals(vector<Particle*> particles, int thread_num);
-    string outputText();
-    void computeAverages();
+    virtual void sample(bool acceptedStep, vector<Particle*> particles, int thread_num);
+    virtual void updateVals(vector<Particle*> particles, int thread_num);
+    virtual string outputText();
+    virtual void computeAverages();
     double getEnergy() { return m_energy_EV; }
     double getParamDer() { return m_dEnergy; }
-private:
+protected:
     int m_num_threads;
     class System* m_system = nullptr;
     // Calculated each loop
@@ -36,14 +36,16 @@ private:
     double m_dEnergy = 0;
 
 };
-/*
+
 class SavingSampler : public Sampler {
 public:
+    SavingSampler(class System* system, int num_threads);
     void sample(bool acceptedStep, vector<Particle*> particles, int thread_num);
     void updateVals(vector<Particle*> particles, int thread_num);
     string outputText();
     void computeAverages();
 private:
-
+    double *m_arr_energy;
+    int m_paralellSize;
+    vector<int> m_step;
 };
-*/
