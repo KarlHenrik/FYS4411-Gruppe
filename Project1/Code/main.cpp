@@ -17,8 +17,8 @@ int main() {
     { // Simplest possible system simulation
         // ----------------SYSTEM PARAMETERS---------------------
         // Physical system parameters
-        int numberOfDimensions  = 1;
-        int numberOfParticles   = 1;
+        int numberOfDimensions  = 3;
+        int numberOfParticles   = 10;
         double omega            = 1.0;       // Oscillator frequency
         double alpha            = 0.4;       // Variational parameter, initial value
         // Metropolis parameters

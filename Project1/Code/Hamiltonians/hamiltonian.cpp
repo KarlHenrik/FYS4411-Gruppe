@@ -8,5 +8,8 @@ Hamiltonian::Hamiltonian(System* system) {
 }
 
 double Hamiltonian::computeKinetic(std::vector<Particle*> particles) {
-    return -0.5 * m_system->getWaveFunction()->computeLocalDoubleDerivative(particles);
+    return -0.5 * m_system->getWaveFunction()->ComputeLocalFullDer(particles);
+    //computeLocalDoubleDerivative(particles);
+
+    //
 }
