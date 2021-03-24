@@ -1,6 +1,7 @@
 #include "system.h"
 #include "WaveFunctions/wavefunction.h"
 #include "WaveFunctions/simplegaussian.h"
+#include "WaveFunctions/correlated.h"
 #include "Hamiltonians/hamiltonian.h"
 #include "Hamiltonians/harmonicoscillator.h"
 #include "InitialStates/initialstate.h"
@@ -17,7 +18,7 @@ int main() {
     { // Simplest possible system simulation
         // ----------------SYSTEM PARAMETERS---------------------
         // Physical system parameters
-        int numberOfDimensions  = 3;
+        int numberOfDimensions  = 1;
         int numberOfParticles   = 1;
         double omega            = 1.0;       // Oscillator frequency
         double alpha            = 0.4;       // Variational parameter, initial value
@@ -65,7 +66,6 @@ int main() {
         equiSteps = (int) 1e4;    // Amount of the total steps used for equilibration
         system->setNumberOfSteps(metroSteps, equiSteps);
         paramTester->bigCalc(alpha_opt);
-
     }
 
     return 0;

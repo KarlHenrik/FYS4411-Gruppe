@@ -1,15 +1,22 @@
 #pragma once
 #include "wavefunction.h"
 
-class SimpleGaussian : public WaveFunction {
+using namespace std;
+
+class Correlated : public WaveFunction {
 public:
-    SimpleGaussian(class System* system, double alpha);
-    double evaluate(std::vector<class Particle*> particles);
-    double computeDoubleDerivative(std::vector<class Particle*> particles);
-    double ComputeLocalFullDer(std::vector<class Particle*> particles);
-    std::vector<double> ComputeQF(Particle*, std::vector<double>);
-    double evaluateChange(Particle*, double, double);
-    double computeParamDer(std::vector<Particle*> particles);
-    double **AllocateMatrix(int,int);
-    double **MakeDistanceMatrix(std::vector<Particle*> particles);
+    Correlated(class System* system, double alpha);
+    double computeDoubleDerivative(vector<class Particle*> particles);
+    vector<double> computeQF(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, int thread);
+    double computeRatio(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, double oldLengthSq, int thread_num);
+    double computeParamDer(vector<Particle*> particles);
+    void setup(vector<Particle*> particles, int thread_num);
+    void updateNewDist(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, int thread_num);
+
+private:
+
+    double m_a = 1; // what should this be!!??!?
+    double*** old_Dist;
+    double*** new_Dist;
+    double**** unit_Vec;
 };

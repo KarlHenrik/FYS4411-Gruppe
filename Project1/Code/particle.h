@@ -9,10 +9,12 @@ public:
     void adjustLangevin(std::vector<double> move);
     void setNumberOfDimensions(int numberOfDimensions);
     std::vector<double> getPosition() { return m_position; }
-    double getLengthSq();
-    int getDims();
+    double getLengthSq() { return m_lengthSq; }
+    int getDims() { return m_numberOfDimensions; }
 
 private:
     int m_numberOfDimensions = 0;
     std::vector<double> m_position = std::vector<double>();
+    double m_lengthSq;
+    void updateLengthSq();
 };

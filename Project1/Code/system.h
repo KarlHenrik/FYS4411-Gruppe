@@ -7,8 +7,8 @@ using namespace std;
 class System {
 public:
     System(int num_threads = -1, int seed = -1);
-    bool ImmetropolisStep           (vector<Particle*> particles, double& waveFuncValue);
-    bool metropolisStep             (vector<Particle*> particles, double& waveFuncValue);
+    bool imMetropolisStep           (vector<Particle*> particles);
+    bool metropolisStep             (vector<Particle*> particles);
     void runMetropolisSteps         (bool m_choice = false);
     void setNumberOfParticles       (int numberOfParticles);
     void setNumberOfDimensions      (int numberOfDimensions);

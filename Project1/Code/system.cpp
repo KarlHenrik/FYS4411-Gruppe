@@ -30,15 +30,17 @@ System::System(int num_threads, int seed) {
     }
 }
 
-bool System::ImmetropolisStep(vector<Particle*> particles, double& waveFuncValue) {
+bool System::imMetropolisStep(vector<Particle*> particles) {
     Random* private_random = m_randoms.at(omp_get_thread_num());
 
-    Particle* randParticle = particles[private_random->nextInt(0, m_numberOfParticles - 1)];
+    int particle_idx = private_random->nextInt(0, m_numberOfParticles - 1);
+    Particle* randParticle = particles[particle_idx];
+
     vector<double> oldPos = randParticle->getPosition();
     double oldLengthSq = randParticle->getLengthSq();
 
     // Obtaining the vector contaning drift force entries from SimpleGaussian
-    vector<double> oldQuantumForce = m_waveFunction->ComputeQF(randParticle,oldPos);
+    vector<double> oldQuantumForce = m_waveFunction->computeQF(particles, particle_idx, randParticle, oldPos);
     // Declaring a vector to store the change of position in each spatial direction
     vector<double> move(m_numberOfDimensions, 0);
 
@@ -46,23 +48,20 @@ bool System::ImmetropolisStep(vector<Particle*> particles, double& waveFuncValue
     for (int i = 0; i < m_numberOfDimensions; i++) {
         move[i] = 0.5 * m_timestep * oldQuantumForce[i] + private_random->nextGaussian(0.,1.) * sqrt(m_timestep);
     }
-
     // Changing randParticle position
     randParticle->adjustLangevin(move);
     vector<double> newPos = randParticle->getPosition();
 
-    double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
-    vector<double> newQuantumForce = m_waveFunction->ComputeQF(randParticle, newPos);
+    double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, oldLengthSq, omp_get_thread_num());
+    vector<double> newQuantumForce = m_waveFunction->computeQF(particles, particle_idx, randParticle, newPos);
     double GreensFunctionRatio = 0.0;
-
     for (int i = 0; i < m_numberOfDimensions; i++) {
         GreensFunctionRatio += (oldQuantumForce[i] + newQuantumForce[i]) * (oldPos[i] - newPos[i] +
                                     m_timestep * (oldQuantumForce[i] - newQuantumForce[i]));
     }
     GreensFunctionRatio = exp(0.5 * GreensFunctionRatio);
 
-    if (private_random->nextDouble() < GreensFunctionRatio * pow(newWaveFuncValue / waveFuncValue, 2)) {
-        waveFuncValue = newWaveFuncValue;
+    if (private_random->nextDouble() < GreensFunctionRatio * pow(waveFuncRatio, 2)) {
         oldQuantumForce = newQuantumForce;
         return true;
     } else {
@@ -71,20 +70,19 @@ bool System::ImmetropolisStep(vector<Particle*> particles, double& waveFuncValue
     }
 }
 
-bool System::metropolisStep(vector<Particle*> particles, double& waveFuncValue) {
+bool System::metropolisStep(vector<Particle*> particles) {
     Random* private_random = m_randoms.at(omp_get_thread_num());
 
-    Particle* randParticle = particles[private_random->nextInt(0, m_numberOfParticles - 1)];
+    int particle_idx = private_random->nextInt(0, m_numberOfParticles - 1);
+    Particle* randParticle = particles[particle_idx];
     vector<double> oldPos = randParticle->getPosition();
     double oldLengthSq = randParticle->getLengthSq();
 
     double dir = (private_random->nextInt(1) - 0.5) * 2;
-
     randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
-    double newWaveFuncValue = m_waveFunction->evaluateChange(randParticle, waveFuncValue, oldLengthSq);
 
-    if (private_random->nextDouble() < pow(newWaveFuncValue / waveFuncValue, 2)) {
-        waveFuncValue = newWaveFuncValue;
+    double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, oldLengthSq, omp_get_thread_num());
+    if (private_random->nextDouble() < pow(waveFuncRatio, 2)) {
         return true;
     } else {
         randParticle->setPosition(oldPos);
@@ -98,25 +96,25 @@ void System::runMetropolisSteps(bool m_choice) {
     {
         // Private variables setup for each thread
         vector<Particle*> private_particles = m_initialState->newParticles();
-        double private_waveFuncValue = m_waveFunction->evaluate(private_particles);
         int thread_num = omp_get_thread_num();
+        m_waveFunction->setup(private_particles, thread_num);
 
         if (m_choice == 1) { // Importance sampling
             for (int i = 0; i < m_equiSteps; i++) { // Equilibration
-                ImmetropolisStep(private_particles, private_waveFuncValue);
+                imMetropolisStep(private_particles);
             }
             m_sampler->updateVals(private_particles, thread_num);
             for (int i = m_equiSteps; i < parallellSteps; i++) { // Steps which are sampled
-                bool acceptedStep = ImmetropolisStep(private_particles, private_waveFuncValue);
+                bool acceptedStep = imMetropolisStep(private_particles);
                 m_sampler->sample(acceptedStep, private_particles, thread_num);
             }
         } else { // Standard metropolis
             for (int i = 0; i < m_equiSteps; i++) { // Equilibration
-                metropolisStep(private_particles, private_waveFuncValue);
+                metropolisStep(private_particles);
             }
             m_sampler->updateVals(private_particles, thread_num);
             for (int i = m_equiSteps; i < parallellSteps; i++) { // Steps which are sampled
-                bool acceptedStep = metropolisStep(private_particles, private_waveFuncValue);
+                bool acceptedStep = metropolisStep(private_particles);
                 m_sampler->sample(acceptedStep, private_particles, thread_num);
             }
         }

@@ -1,4 +1,4 @@
-#include "simplegaussian.h"
+#include "correlated.h"
 #include <cmath>
 #include <cassert>
 #include "wavefunction.h"
@@ -9,37 +9,46 @@
 
 using namespace std;
 
-SimpleGaussian::SimpleGaussian(System* system, double alpha) :
+Correlated::Correlated(System* system, double alpha) :
         WaveFunction(system) {
     assert(alpha >= 0);
     m_numberOfParameters = 1;
     m_parameters.reserve(1);
     m_parameters.push_back(alpha);
+
+    // initializing matrix for storing relative distances between bosons
+    old_Dist = new double **[m_system->getNumerOfThreads()];
+    new_Dist = new double **[m_system->getNumerOfThreads()];
+    unit_Vec = new double ***[m_system->getNumerOfThreads()];
 }
 
-double SimpleGaussian::evaluate(std::vector<class Particle*> particles) {
-    double wf = 1;
+double Correlated::computeRatio(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, double oldLengthSq, int thread_num) {
     double alpha = m_parameters[0];
-    for (int i = 0; i < particles.size(); i++) {
-        wf *= exp(-alpha * particles[i]->getLengthSq());
+
+    double** old_R = old_Dist[thread_num];
+    double** new_R = new_Dist[thread_num];
+    // Starting with the uncorrelated part
+    double oldTerm = exp(-alpha * oldLengthSq);
+    double newTerm = exp(-alpha * particles[particle_idx]->getLengthSq());
+    for (int i = 0; i < particle_idx; i++) { // particles before randParticle
+        oldTerm *= 1 - m_a / old_R[particle_idx][i];
+        newTerm *= 1 - m_a / new_R[particle_idx][i];
     }
+    for (int i = particle_idx + 1; i < (int) particles.size(); i++) { // particles after randParticle
+        oldTerm *= 1 - m_a / old_R[particle_idx][i];
+        newTerm *= 1 - m_a / new_R[particle_idx][i];
+    }
+    double waveFuncRatio = newTerm / oldTerm;
+    //All other terms are the same and cancel
 
-    return wf;
+    return waveFuncRatio;
 }
 
-double SimpleGaussian::evaluateChange(Particle* randParticle, double waveFunctionValue, double oldLengthSq) {
-    double alpha = m_parameters[0];
-    waveFunctionValue /= exp(-alpha * oldLengthSq);
-    waveFunctionValue *= exp(-alpha * randParticle->getLengthSq());
-
-    return waveFunctionValue;
-}
-
-double SimpleGaussian::computeDoubleDerivative(std::vector<class Particle*> particles) {
+double Correlated::computeDoubleDerivative(vector<class Particle*> particles) {
     double doubleDerivative = 0;
     double alpha = m_parameters[0];
 
-    for (int i = 0; i < particles.size(); i++) {
+    for (int i = 0; i < (int) particles.size(); i++) {
         doubleDerivative += particles[i]->getDims() - 2.0 * alpha * particles[i]->getLengthSq();
     }
     doubleDerivative *= -2.0 * alpha;
@@ -48,19 +57,32 @@ double SimpleGaussian::computeDoubleDerivative(std::vector<class Particle*> part
 }
 
 // Computation of the Quantum Force with the special case of a Gaussian trial WF
-std::vector <double> SimpleGaussian::ComputeQF(Particle* randParticle, std::vector<double> oldPos) {
-    std::vector <double> QuantumForce(randParticle->getDims(), 0);
+vector <double> Correlated::computeQF(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, int thread) {
+    vector<double> QuantumForce(randParticle->getDims(), 0);
     double alpha = m_parameters[0];
 
-    for (int i = 0; i < randParticle->getDims(); i++) {
-        QuantumForce[i] = -4 * alpha * oldPos[i];
+    double temp_fac = 0;
+    vector<double> vecSum(randParticle->getDims(), 0);
+    for (int i = 0; i < particle_idx; i++) {
+        temp_fac = m_a / (pow(old_Dist[particle_idx][i], 2) - m_a * old_Dist[particle_idx][i])
+        for (int d = 0; d < (int) particles[0]->getDims(); d++) {
+            vecSum[d] += unit_Vec[thread][particle_idx][i][d] * temp_fac;
+        }
+    } for (int i = particle_idx + 1; i < (int) particles.size(); i++) {
+        temp_fac = m_a / (pow(old_Dist[particle_idx][i], 2) - m_a * old_Dist[particle_idx][i])
+        for (int d = 0; d < (int) particles[0]->getDims(); d++) {
+            vecSum[d] += unit_Vec[thread][particle_idx][i][d] * temp_fac;
+        }
     }
 
+    for (int d = 0; d < (int) randParticle->getDims(); d++) {
+        QuantumForce[d] = -4 * alpha * oldPos[d] + 2 * vecSum[d];
+    }
     return QuantumForce;
 }
 
 
-double SimpleGaussian::computeParamDer(std::vector<Particle*> particles) {
+double Correlated::computeParamDer(vector<Particle*> particles) {
     // Only works for this very specific problem!
     double der = 0;
     for (int i = 0; i < (int) particles.size(); i++) {
@@ -69,61 +91,44 @@ double SimpleGaussian::computeParamDer(std::vector<Particle*> particles) {
     return der;
 }
 
-// Code taken from Morten H. Jensen's GITHUB
-/*
-double ** SimpleGaussian::AllocateMatrix(int m, int n) {
-double ** Matrix;
-Matrix = new double*[m];
-for(int i=0;i<m;i++){
-  Matrix[i] = new double[n];
-  for(int j=0;j<m;j++)
-    Matrix[i][j] = 0.0;
-}
-return Matrix;
-}
-*/
-double ** SimpleGaussian::MakeDistanceMatrix(std::vector<Particle*> particles) {
+void Correlated::setup(vector<Particle*> particles, int thread) {
+    old_Dist[thread] = new double *[particles.size()];
+    new_Dist[thread] = new double *[particles.size()];
+    unit_Vec[thread] = new double **[particles.size()];
+    for (int p1 = 0; p1 < (int) particles.size(); p1++) {
+        old_Dist[thread][p1] = new double [particles.size()];
+        new_Dist[thread][p1] = new double [particles.size()];
+        unit_Vec[thread][p1] = new double *[particles.size()];
+        for (int p2 = 0; p2 < (int) particles.size(); p2++) {
+            double interdistance = 0;
+            for (int d = 0; d < (int) particles[0]->getDims(); d++) {
+                interdistance += pow(particles[p1]->getPosition().at(d) - particles[p2]->getPosition().at(d), 2);
+            }
+            old_Dist[thread][p1][p2] = interdistance;
+            new_Dist[thread][p1][p2] = interdistance;
 
-    //int np = particles.size();
-
-    // initializing matrix for storing relative distances between bosons
-    double **R;
-    R = new double*[particles.size()];
-    for (int i = 0; i < particles.size(); i++) {
-        R[i] = new double [particles.size()];
-    }
-
-
-    for (int i = 0; i < particles.size(); i++) {
-        R[i][i] = 0;
-        for (int j = 0; j < particles.size(); j++) {
-            for (int k = j + 1; j < particles.size(); j++) {
-                double interdistance = 0;
-                for (int d = 0; d < particles[i]->getDims(); d++) {
-                    interdistance += pow(particles[i]->getPosition().at(k) - particles[j]->getPosition().at(k), 2));
-                }
-                R[j][k] = interdistance;
-                R[k][j] = R[j][k];
+            unit_Vec[thread][p1][p2] = new double [particles[0]->getDims()];
+            for (int d = 0; d < (int) particles[0]->getDims(); d++) {
+                unit_Vec[thread][p1][p2][d] = (particles[p2]->getPosition().at(d) - particles[p1]->getPosition().at(d)) / interdistance;
             }
         }
     }
-    return R;
 }
-
-double SimpleGaussian::ComputeLocalFullDer(std::vector<class Particle*> particles) {
+/*
+double Correlated::ComputeLocalFullDer(vector<class Particle*> particles) {
     double alpha = m_parameters[0];
-    double beta = 2.;
-    double a = 1.;
-    double DoubleDer = 0.;
-    double TotalDoubleDer = 0.;
+    double beta = 2;
+    double a = 1;
+    double DoubleDer = 0;
+    double TotalDoubleDer = 0;
 
     //int np = particles.size();
     //int dims = particles[0]->getDims();
 
     double **R = MakeDistanceMatrix(particles);
 
-    std::vector<double> SUM1(particles.size(),0);
-    std::vector<double> SUM2(particles.size(),0);
+    vector<double> SUM1(particles.size(),0);
+    vector<double> SUM2(particles.size(),0);
     double SUM3 = 0;
 
     for (int p = 0; p < particles.size(); p++) {
@@ -151,3 +156,4 @@ double SimpleGaussian::ComputeLocalFullDer(std::vector<class Particle*> particle
 
     return TotalDoubleDer;
 }
+*/

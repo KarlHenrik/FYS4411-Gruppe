@@ -17,29 +17,23 @@ SimpleGaussian::SimpleGaussian(System* system, double alpha) :
     m_parameters.push_back(alpha);
 }
 
-double SimpleGaussian::evaluate(std::vector<class Particle*> particles) {
-    double wf = 1;
+double SimpleGaussian::computeRatio(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, double oldLengthSq, int thread_num) {
+    (void)particle_idx, (void)oldPos, (void)thread_num, (void)particles;
     double alpha = m_parameters[0];
-    for (int i = 0; i < particles.size(); i++) {
-        wf *= exp(-alpha * particles[i]->getLengthSq());
-    }
+    double waveFuncRatio = exp(-alpha * randParticle->getLengthSq() + alpha * oldLengthSq);
 
-    return wf;
+    //Old wavefunc value term: exp(-alpha * oldLengthSq)
+    //New wavefunc value term: exp(-alpha * randParticle->getLengthSq())
+    //All other terms are the same and cancel. Since they are both exponentials, we can subtract the exponents
+
+    return waveFuncRatio;
 }
 
-double SimpleGaussian::evaluateChange(Particle* randParticle, double waveFunctionValue, double oldLengthSq) {
-    double alpha = m_parameters[0];
-    waveFunctionValue /= exp(-alpha * oldLengthSq);
-    waveFunctionValue *= exp(-alpha * randParticle->getLengthSq());
-
-    return waveFunctionValue;
-}
-
-double SimpleGaussian::computeDoubleDerivative(std::vector<class Particle*> particles) {
+double SimpleGaussian::computeDoubleDerivative(vector<class Particle*> particles) {
     double doubleDerivative = 0;
     double alpha = m_parameters[0];
 
-    for (int i = 0; i < particles.size(); i++) {
+    for (int i = 0; i < (int) particles.size(); i++) {
         doubleDerivative += particles[i]->getDims() - 2.0 * alpha * particles[i]->getLengthSq();
     }
     doubleDerivative *= -2.0 * alpha;
@@ -48,23 +42,28 @@ double SimpleGaussian::computeDoubleDerivative(std::vector<class Particle*> part
 }
 
 // Computation of the Quantum Force with the special case of a Gaussian trial WF
-std::vector <double> SimpleGaussian::ComputeQF(Particle* randParticle, std::vector<double> oldPos) {
-    std::vector <double> QuantumForce(randParticle->getDims(), 0);
+vector<double> SimpleGaussian::computeQF(vector<Particle*> particles, int particle_idx, Particle* randParticle, vector<double> oldPos, int thread) {
+    (void)particle_idx, (void)particles, (void)thread;
+    vector <double> QuantumForce(randParticle->getDims(), 0);
     double alpha = m_parameters[0];
 
     for (int i = 0; i < randParticle->getDims(); i++) {
         QuantumForce[i] = -4 * alpha * oldPos[i];
     }
-
     return QuantumForce;
 }
 
 
-double SimpleGaussian::computeParamDer(std::vector<Particle*> particles) {
+double SimpleGaussian::computeParamDer(vector<Particle*> particles) {
     // Only works for this very specific problem!
     double der = 0;
     for (int i = 0; i < (int) particles.size(); i++) {
         der += particles[i]->getLengthSq();
     }
     return der;
+}
+
+void SimpleGaussian::setup(vector<Particle*> particles, int thread) {
+    (void)particles, (void)thread;
+    return;
 }

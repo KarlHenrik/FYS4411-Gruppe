@@ -7,3 +7,7 @@ WaveFunction::WaveFunction(System* system) {
 void WaveFunction::setParameters(std::vector<double> parameters) {
     m_parameters = parameters;
 }
+
+void WaveFunction::setup(vector<Particle*> particles, int thread) {
+    return;
+}
