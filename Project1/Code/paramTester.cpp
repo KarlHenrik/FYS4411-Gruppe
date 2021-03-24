@@ -58,6 +58,7 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
 
 
 void ParamTester::bigCalc(double alpha) {
+    m_system->addOutput("Energy\n");
     vector<double> parameters {0};
 
     cout << "Running large scale calculation for alpha = " + to_string(alpha) << endl;

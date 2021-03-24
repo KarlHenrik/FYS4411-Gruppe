@@ -18,7 +18,7 @@ int main() {
         // ----------------SYSTEM PARAMETERS---------------------
         // Physical system parameters
         int numberOfDimensions  = 3;
-        int numberOfParticles   = 10;
+        int numberOfParticles   = 1;
         double omega            = 1.0;       // Oscillator frequency
         double alpha            = 0.4;       // Variational parameter, initial value
         // Metropolis parameters
@@ -55,7 +55,7 @@ int main() {
         metroSteps = (int) 1e5; // Number of metropolis steps
         equiSteps = (int) 1e4;  // Amount of the total steps used for equilibration
         system->setNumberOfSteps(metroSteps, equiSteps);
-        double lr = 0.5;
+        double lr = 0.1;
         double tol = 0.0000001;
         double max_iter = 10;
         double alpha_opt = paramTester->alphaGD(alpha, lr, tol, max_iter);
