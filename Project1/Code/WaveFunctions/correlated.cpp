@@ -38,14 +38,10 @@ double Correlated::computeRatio(vector<Particle*> particles, int particle_idx, P
     double newTerm = exp(-alpha * ell_r2);
     double oldTerm = exp(-alpha * old_ell_r2);
     // Then the uncorrelated part which comes from the distances to the moved particle
-    for (int p2 = 0; p2 < particle_idx; p2++) { // particles before randParticle
-        if (dists[thread_num][particle_idx][p2] < m_a) {
-            return 0; // Deny all moves which put particles closer than a
+    for (int p2 = 0; p2 < (int) particles.size(); p2++) { // particles before randParticle
+        if (p2 == particle_idx) {
+            continue;
         }
-        oldTerm *= 1 - m_a / old_dists[thread_num][particle_idx][p2];
-        newTerm *= 1 - m_a / dists[thread_num][particle_idx][p2];
-    }
-    for (int p2 = particle_idx + 1; p2 < (int) particles.size(); p2++) { // particles after randParticle
         if (dists[thread_num][particle_idx][p2] < m_a) {
             return 0; // Deny all moves which put particles closer than a
         }
@@ -60,7 +56,10 @@ void Correlated::computeDists(vector<Particle*> particles, int particle_idx, Par
     int p1 = particle_idx;
     vector<double> p1Pos = randParticle->getPosition();
     double interdistance;
-    for (int p2 = 0; p2 < particle_idx; p2++) { // particles before randParticle
+    for (int p2 = 0; p2 < (int) particles.size(); p2++) {
+        if (p2 == particle_idx) {
+            continue;
+        }
         interdistance = 0;
         for (int d = 0; d < (int) particles[0]->getDims(); d++) {
             interdistance += pow(p1Pos.at(d) - particles[p2]->getPosition().at(d), 2);
@@ -84,7 +83,10 @@ void Correlated::computeDists(vector<Particle*> particles, int particle_idx, Par
 
 void Correlated::revertDists(vector<Particle*> particles, int particle_idx, int thread) {
     int p1 = particle_idx;
-    for (int p2 = 0; p2 < particle_idx; p2++) { // particles before randParticle
+    for (int p2 = 0; p2 < (int) particles.size(); p2++) {
+        if (p2 == particle_idx) {
+            continue;
+        }
         dists[thread][p1][p2] = old_dists[thread][p1][p2];
         dists[thread][p2][p1] = old_dists[thread][p2][p1];
         for (int d = 0; d < (int) particles[0]->getDims(); d++) {
@@ -102,17 +104,16 @@ vector <double> Correlated::computeQF(vector<Particle*> particles, int particle_
 
     double temp_fac = 0;
     vector<double> vecSum(randParticle->getDims(), 0);
-    for (int i = 0; i < particle_idx; i++) {
-        temp_fac = m_a / (pow(old_dists[thread][particle_idx][i], 2) - m_a * old_dists[thread][particle_idx][i]);
-        for (int d = 0; d < (int) particles[0]->getDims(); d++) {
-            vecSum[d] += unit_vecs[thread][particle_idx][i][d] * temp_fac;
+    for (int i = 0; i < (int) particles.size(); i++) {
+        if (i == particle_idx) {
+            continue;
         }
-    } for (int i = particle_idx + 1; i < (int) particles.size(); i++) {
         temp_fac = m_a / (pow(old_dists[thread][particle_idx][i], 2) - m_a * old_dists[thread][particle_idx][i]);
         for (int d = 0; d < (int) particles[0]->getDims(); d++) {
             vecSum[d] += unit_vecs[thread][particle_idx][i][d] * temp_fac;
         }
     }
+
     for (int d = 0; d < (int) randParticle->getDims(); d++) {
         QuantumForce[d] = -4 * alpha * oldPos[d] * ell[d] + 2 * vecSum[d];
     }
@@ -171,14 +172,18 @@ void Correlated::setup(vector<Particle*> particles, int thread) {
 
             unit_vecs[thread][p1][p2] = new double [particles[0]->getDims()];
             old_unit_vecs[thread][p1][p2] = new double [particles[0]->getDims()];
-            for (int d = 0; d < (int) particles[0]->getDims(); d++) {
-                if (interdistance == 0) {
-                    unit_vecs[thread][p1][p2][d] = 0; // to avoid dividing by zero for the distance from a particle to itself
-                } else {
-                    unit_vecs[thread][p1][p2][d] = (particles[p2]->getPosition().at(d) - particles[p1]->getPosition().at(d)) / interdistance;
+            if (p1 == p2) {
+                for (int d = 0; d < (int) particles[0]->getDims(); d++) {
+                    unit_vecs[thread][p1][p2][d] = 0;
+                    old_unit_vecs[thread][p1][p2][d] = 0;
                 }
-                old_unit_vecs[thread][p1][p2][d] = unit_vecs[thread][p1][p2][d];
+            } else {
+                for (int d = 0; d < (int) particles[0]->getDims(); d++) {
+                    unit_vecs[thread][p1][p2][d] = (particles[p2]->getPosition().at(d) - particles[p1]->getPosition().at(d)) / interdistance;
+                    old_unit_vecs[thread][p1][p2][d] = unit_vecs[thread][p1][p2][d];
+                }
             }
+
         }
         old_dists[thread][p1][p1] = 1; // these should never appear in a non-zero expression!
         dists[thread][p1][p1] = 1; // the unit vectors should zero these out in all cases

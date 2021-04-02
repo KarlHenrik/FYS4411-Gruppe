@@ -7,8 +7,7 @@ using namespace std;
 Particle::Particle() {
 }
 
-void Particle::setPosition(const std::vector<double> &position) {
-    assert(position.size() == (unsigned int) m_numberOfDimensions);
+void Particle::setPosition(vector<double> position) {
     m_position = position;
     updateLengthSq();
 }

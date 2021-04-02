@@ -38,7 +38,7 @@ vector<class Particle*> RandomUniform::newParticles() {
 vector<double> RandomUniform::findPos(vector<class Particle*> particles, Random* rng) {
     vector<double> position = vector<double>();
     for (int j=0; j < m_numberOfDimensions; j++) {
-        position.push_back(rng->nextDouble());
+        position.push_back((rng->nextDouble() - 0.5) * 2.0); // uniform from -1 to 1
     }
 
     double limit = m_a * m_a;

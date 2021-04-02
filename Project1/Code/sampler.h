@@ -44,8 +44,12 @@ public:
     void updateVals(vector<Particle*> particles, int thread_num);
     string outputText();
     void computeAverages() { return; }
+    void oneBody(vector<Particle*> particles, int thread_num);
 private:
     double *m_arr_energy;
+    double **m_oneBody;
     int m_paralellSize;
     vector<int> m_step;
+    double m_max_rad = 4;
+    int m_bins = 80;
 };

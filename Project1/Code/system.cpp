@@ -77,8 +77,7 @@ bool System::metropolisStep(vector<Particle*> particles) {
     int particle_idx = private_random->nextInt(0, m_numberOfParticles - 1);
     Particle* randParticle = particles[particle_idx];
     vector<double> oldPos = randParticle->getPosition();
-
-    double dir = (private_random->nextInt(1) - 0.5) * 2;
+    double dir = (private_random->nextInt(1) - 0.5) * 2; // 1 or -1
     randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
 
     double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, omp_get_thread_num());
@@ -132,6 +131,7 @@ void System::addOutput(string text) {
 void System::clearOutput() {
     m_output = "";
 }
+
 
 // ----------------- Setters and getters ----------------------
 

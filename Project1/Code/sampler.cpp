@@ -99,7 +99,14 @@ string Sampler::outputText() {
 // ------------- SavingSampler functions -----------------
 
 SavingSampler::SavingSampler(System* system, int num_threads) : Sampler(system, num_threads) {
-    m_arr_energy = new double[system->getMetroSteps()];
+    m_arr_energy = new double [system->getMetroSteps()];
+    m_oneBody = new double *[num_threads];
+    for (int t = 0; t < num_threads; t++) {
+        m_oneBody[t] = new double [m_bins];
+        for (int i = 0; i < m_bins; i++) {
+            m_oneBody[t][i] = 0;
+        }
+    }
     m_paralellSize = (int) system->getMetroSteps() / num_threads;
 
     // Setting up vectors with values for all threads
@@ -116,6 +123,7 @@ void SavingSampler::sample(bool acceptedStep, vector<Particle*> particles, int t
     }
     m_step.at(thread_num)++;
     m_arr_energy[m_paralellSize * thread_num + m_step.at(thread_num) - 1] = m_energy.at(thread_num);
+    oneBody(particles, thread_num);
 }
 
 void SavingSampler::updateVals(vector<Particle*> particles, int thread_num) {
@@ -123,9 +131,38 @@ void SavingSampler::updateVals(vector<Particle*> particles, int thread_num) {
 }
 
 string SavingSampler::outputText() {
+    double step = m_max_rad / m_bins;
     stringstream buffer;
-    for (int i = 0; i < m_system->getMetroSteps(); i++) {
+
+    for (int i = 0; i < m_bins; i++) {
+        buffer << setw(15) << m_arr_energy[i];
+        buffer << setw(15) << (i + 1) * step;
+
+        double density = 0;
+        for (int t = 0; t < m_num_threads; t++) {
+            density += m_oneBody[t][i];
+        }
+        buffer << setw(15) << density << endl;
+    }
+
+    for (int i = m_bins; i < m_system->getMetroSteps(); i++) {
         buffer << setw(15) << m_arr_energy[i] << endl;
     }
+
     return buffer.str();
+}
+
+void SavingSampler::oneBody(vector<Particle*> particles, int thread_num) {
+    double step = m_max_rad / m_bins;
+    double rad;
+    for (int p1 = 0; p1 < (int) particles.size(); p1++) {
+        rad = sqrt(particles[p1]->getLengthSq());
+
+        for (int bin = 0; bin < m_bins; bin++) {
+            if (rad < (bin + 1) * step) {
+                m_oneBody[thread_num][bin]++;
+                break;
+            }
+        }
+    }
 }
