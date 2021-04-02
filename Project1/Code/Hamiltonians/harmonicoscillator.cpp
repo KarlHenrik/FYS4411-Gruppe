@@ -9,11 +9,11 @@ HarmonicOscillator::HarmonicOscillator(System* system, double omega) : Hamiltoni
     m_omegaSq = omega * omega;
 }
 
-double HarmonicOscillator::computeEnergy(std::vector<Particle*> particles) {
+double HarmonicOscillator::computeEnergy(std::vector<Particle*> particles, int thread) {
     double potentialEnergy = 0;
     for (int i = 0; i < (int) particles.size(); i++) {
         potentialEnergy += 0.5 * m_omegaSq * particles[i]->getLengthSq();
     }
-    double kineticEnergy = computeKinetic(particles);
+    double kineticEnergy = computeKinetic(particles, thread);
     return kineticEnergy + potentialEnergy;
 }

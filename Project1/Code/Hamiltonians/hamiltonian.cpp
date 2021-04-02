@@ -7,10 +7,6 @@ Hamiltonian::Hamiltonian(System* system) {
     m_system = system;
 }
 
-double Hamiltonian::computeKinetic(std::vector<Particle*> particles) {
-    //return -0.5 * m_system->getWaveFunction()->ComputeLocalFullDer(particles);
-    return -0.5 * m_system->getWaveFunction()->computeDoubleDerivative(particles);
-    //computeLocalDoubleDerivative(particles);
-
-    //
+double Hamiltonian::computeKinetic(std::vector<Particle*> particles, int thread) {
+    return -0.5 * m_system->getWaveFunction()->computeDoubleDerivative(particles, thread);
 }

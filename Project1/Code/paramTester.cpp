@@ -42,7 +42,7 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
 
         cout << "\r" + to_string(alpha) + " - " + to_string((int) (1.0 * iter / max_iter * 100.0) ) + "%" << flush;
 
-        alpha = alpha + sampler->getParamDer() * lr;
+        alpha = alpha - sampler->getParamDer() * lr;
         iter++;
     }
     cout << endl;

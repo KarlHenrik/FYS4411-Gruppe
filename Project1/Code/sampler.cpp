@@ -40,7 +40,7 @@ void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int th
     if (acceptedStep) {
         m_counter.at(thread_num)++;
 
-        m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+        m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles, thread_num);
         m_energy2.at(thread_num) = m_energy.at(thread_num) * m_energy.at(thread_num);
         m_dPsi.at(thread_num) = m_system->getWaveFunction()->computeParamDer(particles);
     }
@@ -52,7 +52,7 @@ void Sampler::sample(bool acceptedStep, std::vector<Particle*> particles, int th
 
 void Sampler::updateVals(std::vector<Particle*> particles, int thread_num) {
     // Updates values after equilibration
-    m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+    m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles, thread_num);
     m_energy2.at(thread_num) = m_energy.at(thread_num) * m_energy.at(thread_num);
     m_dPsi.at(thread_num) = m_system->getWaveFunction()->computeParamDer(particles);
 }
@@ -112,16 +112,14 @@ void SavingSampler::sample(bool acceptedStep, vector<Particle*> particles, int t
     // Only calculate and update values when step is accepted, and after equilibration!
     if (acceptedStep) {
         m_counter.at(thread_num)++;
-        m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+        m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles, thread_num);
     }
-    m_total_energy.at(thread_num) += m_energy.at(thread_num);
-
     m_step.at(thread_num)++;
-    m_arr_energy[m_paralellSize * thread_num + m_step.at(thread_num) - 1] = m_total_energy.at(thread_num) / m_step.at(thread_num);
+    m_arr_energy[m_paralellSize * thread_num + m_step.at(thread_num) - 1] = m_energy.at(thread_num);
 }
 
 void SavingSampler::updateVals(vector<Particle*> particles, int thread_num) {
-    m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles);
+    m_energy.at(thread_num) = m_system->getHamiltonian()->computeEnergy(particles, thread_num);
 }
 
 string SavingSampler::outputText() {
@@ -130,7 +128,4 @@ string SavingSampler::outputText() {
         buffer << setw(15) << m_arr_energy[i] << endl;
     }
     return buffer.str();
-}
-void SavingSampler::computeAverages() {
-    return;
 }

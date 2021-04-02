@@ -5,7 +5,7 @@
 class HarmonicOscillator : public Hamiltonian {
 public:
     HarmonicOscillator(System* system, double omega);
-    double computeEnergy(std::vector<Particle*> particles);
+    double computeEnergy(std::vector<Particle*> particles, int thread);
 
 private:
     double m_omega = 0;

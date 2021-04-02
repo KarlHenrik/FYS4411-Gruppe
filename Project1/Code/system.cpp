@@ -9,6 +9,8 @@
 
 #include <string>
 
+#include <iostream>
+
 using namespace std;
 
 System::System(int num_threads, int seed) {
@@ -31,19 +33,18 @@ System::System(int num_threads, int seed) {
 }
 
 bool System::imMetropolisStep(vector<Particle*> particles) {
-    Random* private_random = m_randoms.at(omp_get_thread_num());
+    int thread_num = omp_get_thread_num();
+    Random* private_random = m_randoms.at(thread_num);
 
     int particle_idx = private_random->nextInt(0, m_numberOfParticles - 1);
     Particle* randParticle = particles[particle_idx];
 
     vector<double> oldPos = randParticle->getPosition();
-    double oldLengthSq = randParticle->getLengthSq();
 
     // Obtaining the vector contaning drift force entries from SimpleGaussian
-    vector<double> oldQuantumForce = m_waveFunction->computeQF(particles, particle_idx, randParticle, oldPos);
+    vector<double> oldQuantumForce = m_waveFunction->computeQF(particles, particle_idx, randParticle, oldPos, thread_num);
     // Declaring a vector to store the change of position in each spatial direction
     vector<double> move(m_numberOfDimensions, 0);
-
     // Looping over each spatial component to update the positions
     for (int i = 0; i < m_numberOfDimensions; i++) {
         move[i] = 0.5 * m_timestep * oldQuantumForce[i] + private_random->nextGaussian(0.,1.) * sqrt(m_timestep);
@@ -52,20 +53,20 @@ bool System::imMetropolisStep(vector<Particle*> particles) {
     randParticle->adjustLangevin(move);
     vector<double> newPos = randParticle->getPosition();
 
-    double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, oldLengthSq, omp_get_thread_num());
-    vector<double> newQuantumForce = m_waveFunction->computeQF(particles, particle_idx, randParticle, newPos);
+    double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, thread_num);
+    vector<double> newQuantumForce = m_waveFunction->computeQF(particles, particle_idx, randParticle, oldPos, thread_num);
     double GreensFunctionRatio = 0.0;
     for (int i = 0; i < m_numberOfDimensions; i++) {
         GreensFunctionRatio += (oldQuantumForce[i] + newQuantumForce[i]) * (oldPos[i] - newPos[i] +
                                     m_timestep * (oldQuantumForce[i] - newQuantumForce[i]));
     }
     GreensFunctionRatio = exp(0.5 * GreensFunctionRatio);
-
     if (private_random->nextDouble() < GreensFunctionRatio * pow(waveFuncRatio, 2)) {
         oldQuantumForce = newQuantumForce;
         return true;
     } else {
         randParticle->setPosition(oldPos);
+        m_waveFunction->revertDists(particles, particle_idx, thread_num);
         return false;
     }
 }
@@ -76,16 +77,16 @@ bool System::metropolisStep(vector<Particle*> particles) {
     int particle_idx = private_random->nextInt(0, m_numberOfParticles - 1);
     Particle* randParticle = particles[particle_idx];
     vector<double> oldPos = randParticle->getPosition();
-    double oldLengthSq = randParticle->getLengthSq();
 
     double dir = (private_random->nextInt(1) - 0.5) * 2;
     randParticle->adjustPosition(m_stepLength * dir, private_random->nextInt(0, m_numberOfDimensions - 1));
 
-    double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, oldLengthSq, omp_get_thread_num());
+    double waveFuncRatio = m_waveFunction->computeRatio(particles, particle_idx, randParticle, oldPos, omp_get_thread_num());
     if (private_random->nextDouble() < pow(waveFuncRatio, 2)) {
         return true;
     } else {
         randParticle->setPosition(oldPos);
+        m_waveFunction->revertDists(particles, particle_idx, omp_get_thread_num());
         return false;
     }
 }
@@ -118,6 +119,7 @@ void System::runMetropolisSteps(bool m_choice) {
                 m_sampler->sample(acceptedStep, private_particles, thread_num);
             }
         }
+        m_waveFunction->clear(private_particles, thread_num);
     }
     m_sampler->computeAverages();
     addOutput(m_sampler->outputText());

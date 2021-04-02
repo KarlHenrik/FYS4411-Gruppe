@@ -43,7 +43,7 @@ public:
     void sample(bool acceptedStep, vector<Particle*> particles, int thread_num);
     void updateVals(vector<Particle*> particles, int thread_num);
     string outputText();
-    void computeAverages();
+    void computeAverages() { return; }
 private:
     double *m_arr_energy;
     int m_paralellSize;
