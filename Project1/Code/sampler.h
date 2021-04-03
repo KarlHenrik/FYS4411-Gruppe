@@ -39,7 +39,7 @@ protected:
 
 class SavingSampler : public Sampler {
 public:
-    SavingSampler(class System* system, int num_threads);
+    SavingSampler(class System* system, int num_threads, string fileName);
     void sample(bool acceptedStep, vector<Particle*> particles, int thread_num);
     void updateVals(vector<Particle*> particles, int thread_num);
     string outputText();
@@ -52,4 +52,5 @@ private:
     vector<int> m_step;
     double m_max_rad = 4;
     int m_bins = 80;
+    string m_fileName;
 };

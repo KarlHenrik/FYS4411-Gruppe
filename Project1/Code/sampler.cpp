@@ -98,9 +98,10 @@ string Sampler::outputText() {
 
 // ------------- SavingSampler functions -----------------
 
-SavingSampler::SavingSampler(System* system, int num_threads) : Sampler(system, num_threads) {
+SavingSampler::SavingSampler(System* system, int num_threads, string fileName) : Sampler(system, num_threads) {
     m_arr_energy = new double [system->getMetroSteps()];
     m_oneBody = new double *[num_threads];
+    m_fileName = fileName;
     for (int t = 0; t < num_threads; t++) {
         m_oneBody[t] = new double [m_bins];
         for (int i = 0; i < m_bins; i++) {
@@ -131,21 +132,28 @@ void SavingSampler::updateVals(vector<Particle*> particles, int thread_num) {
 }
 
 string SavingSampler::outputText() {
-    double step = m_max_rad / m_bins;
-    stringstream buffer;
+    ofstream ofile;
+    ofile.open("Output/" + m_fileName + "_oB" + ".txt");
+    ofile << setiosflags(ios::showpoint | ios::uppercase);
 
+    ofile << setw(15) << "r";
+    ofile << setw(15) << "Density" << endl;
+
+    double step = m_max_rad / m_bins;
     for (int i = 0; i < m_bins; i++) {
-        buffer << setw(15) << m_arr_energy[i];
-        buffer << setw(15) << (i + 1) * step;
+        ofile << setw(15) << (i + 1) * step;
 
         double density = 0;
         for (int t = 0; t < m_num_threads; t++) {
             density += m_oneBody[t][i];
         }
-        buffer << setw(15) << density << endl;
+        ofile << setw(15) << density << endl;
     }
+    ofile.close();
 
-    for (int i = m_bins; i < m_system->getMetroSteps(); i++) {
+    // Normal output
+    stringstream buffer;
+    for (int i = 0; i < m_system->getMetroSteps(); i++) {
         buffer << setw(15) << m_arr_energy[i] << endl;
     }
 

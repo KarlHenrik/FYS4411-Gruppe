@@ -21,6 +21,7 @@ void medUtenImp();
 void medUtenParallell();
 
 int main() {
+    benchmarkDim();
     //testing();
     return 0;
 }

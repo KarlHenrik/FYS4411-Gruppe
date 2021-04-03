@@ -59,14 +59,14 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
 
 
 void ParamTester::bigCalc(double alpha) {
-    m_system->addOutput("         Energy              r        Density\n");
+    m_system->addOutput("         Energy\n");
     vector<double> parameters {0};
 
     cout << "Running large scale calculation for alpha = " + to_string(alpha) << endl;
 
     chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
     // looping through the alphas of interest
-    m_system->setSampler(new SavingSampler(m_system, m_system->getNumerOfThreads()));
+    m_system->setSampler(new SavingSampler(m_system, m_system->getNumerOfThreads(), m_fileName));
     parameters.at(0) = alpha;
 
     m_system->getWaveFunction()->setParameters(parameters);
@@ -76,6 +76,7 @@ void ParamTester::bigCalc(double alpha) {
     chrono::duration<double> time_span = chrono::duration_cast<chrono::duration<double>>(stop - start);
     cout << "Execution time: " + to_string(time_span.count()) + "\n\n" << endl;
 
+    m_system->addOutput(to_string(time_span.count()));
     writeOutputToFile("_Big");
     m_system->clearOutput();
 }

@@ -10,6 +10,11 @@
 #include <string>
 
 #include <iostream>
+#include <cmath> // log10
+#include <string> // output
+#include <iomanip>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
