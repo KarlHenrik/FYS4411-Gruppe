@@ -28,7 +28,7 @@ void medUtenImp();
 void medUtenParallell();
 
 int main() {
-    energyPerAlpha();
+    corrResultat();
     return 0;
 }
 
@@ -163,7 +163,7 @@ void corrResultat() {
       // Other parameters
       int seed                = 42;        // Seed for the random number generator. -1 means random seed
       int num_threads         = -1;        // Number of threads for calculation. -1 means max (automatic)
-      string systemName = "Benchmarks/Bench" + to_string(numberOfParticles);
+      string systemName = "Correlated" + to_string(numberOfParticles);
 
       // ---------------SYSTEM SETUP-----------------------
       System* system = new System(num_threads, seed);
