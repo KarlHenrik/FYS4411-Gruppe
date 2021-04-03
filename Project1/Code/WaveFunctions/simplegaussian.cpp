@@ -69,5 +69,5 @@ double SimpleGaussian::computeParamDer(vector<Particle*> particles) {
             der += ipos[d] * ipos[d] * ell[d];
         }
     }
-    return -der;
+    return -der / particles.size();
 }

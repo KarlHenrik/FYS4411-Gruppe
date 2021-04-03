@@ -27,7 +27,7 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
     m_system->addOutput(systemInfo());
 
     vector<double> parameters {0};
-    double delta = 0.0001 + tol;
+    double delta = tol + 1;
     int iter = 0;
 
     chrono::high_resolution_clock::time_point start = chrono::high_resolution_clock::now();
@@ -42,6 +42,7 @@ double ParamTester::alphaGD(double alpha, double lr, double tol, int max_iter) {
 
         cout << "\r" + to_string(alpha) + " - " + to_string((int) (1.0 * iter / max_iter * 100.0) ) + "%" << flush;
 
+        delta = abs(sampler->getParamDer() * lr);
         alpha = alpha - sampler->getParamDer() * lr;
         iter++;
     }
