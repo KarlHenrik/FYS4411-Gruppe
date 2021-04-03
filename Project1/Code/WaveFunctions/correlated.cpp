@@ -129,7 +129,7 @@ double Correlated::computeParamDer(vector<Particle*> particles) {
             der += ipos[d] * ipos[d] * ell[d];
         }
     }
-    return -der;
+    return -der / particles.size();
 }
 
 void Correlated::clear(vector<Particle*> particles, int thread) {
