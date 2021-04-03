@@ -9,7 +9,8 @@ def bigFile(filename):
     """
     big = pd.read_csv(filename, delim_whitespace = True, engine="python")
     t = big.iloc[-1][0]
-    big = big[:-1]
+    accepted = big.iloc[-2][0]
+    big = big[:-2]
     
     energy = np.array(big["Energy"])
     end = 2**int(np.log2(len(energy)))
@@ -18,7 +19,7 @@ def bigFile(filename):
     mean, var = block(energy)
     std = np.sqrt(var)
 
-    return mean, std, t
+    return mean, std, accepted, t
 
 def smallFile(filename):
     """

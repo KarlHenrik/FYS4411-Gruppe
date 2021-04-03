@@ -156,6 +156,11 @@ string SavingSampler::outputText() {
     for (int i = 0; i < m_system->getMetroSteps(); i++) {
         buffer << setw(15) << m_arr_energy[i] << endl;
     }
+    double accepted = 0;
+    for (int t = 0; t < m_num_threads; t++) {
+        accepted += m_counter.at(t);
+    }
+    buffer << setw(15) << accepted / m_system->getMetroSteps() << endl;
 
     return buffer.str();
 }

@@ -10,10 +10,17 @@
 
 #include <string>
 
+#include <iostream>
+#include <cmath> // log10
+#include <string> // output
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+
 using namespace std;
 
 void testing();
-void energiPerAlpha();
+void energyPerAlpha();
 void corrResultat();
 void benchmark(); // DONE!
 void benchmarkDim(); // DONE!
@@ -21,8 +28,7 @@ void medUtenImp();
 void medUtenParallell();
 
 int main() {
-    benchmarkDim();
-    //testing();
+    energyPerAlpha();
     return 0;
 }
 
@@ -83,7 +89,57 @@ void testing() {
     }
 }
 
-void energiPerAlpha() {
+void energyPerAlpha() {
+    // ----------------SYSTEM PARAMETERS---------------------
+    // Physical system parameters
+    int numberOfDimensions  = 3;
+    int numberOfParticles   = 10;
+    double omega            = 1.0;       // Oscillator frequency
+    double alpha            = 0.1;       // Variational parameter, initial value
+    double a                = 0.0042;     // Interaction radius
+    double beta             = 1;   // Shift of trap in the z-direction
+    // Metropolis parameters
+    int metroSteps, equiSteps;           // Steps are specified down with the type of calculation
+    bool ImpSampling        = 1;         // cout << "Perform importance sampling? [0,1] : "; cin >> ImpSampling;
+    double stepLength       = 0.1;       // Metropolis step length used without importance sampling
+    double timestep         = 0.1;      // Time step used in importance sampling movement
+    // Other parameters
+    int seed                = 42;        // Seed for the random number generator. -1 means random seed
+    int num_threads         = -1;        // Number of threads for calculation. -1 means max (automatic)
+    string systemName = "EnergyPerAlpha/EnergyPerAlpha";
+
+    // ---------------SYSTEM SETUP-----------------------
+    System* system = new System(num_threads, seed);
+    system->setHamiltonian    (new HarmonicOscillator(system, omega));
+    system->setWaveFunction   (new SimpleGaussian(system, alpha, a, beta));
+    system->setInitialState   (new RandomUniform(system, numberOfDimensions, numberOfParticles, a));
+    system->setStepLength     (stepLength);
+    system->setTimeStep       (timestep);
+    system->setChoice         (ImpSampling);
+
+    // -------------Calculations---------------------
+    ParamTester* paramTester = new ParamTester(system, systemName);
+
+    // Doing grid search to produce plot of energy for each alpha
+    metroSteps = (int) 2e6; // Number of metropolis steps
+    equiSteps = (int) 1e5;  // Amount of the total steps used for equilibration
+    system->setNumberOfSteps(metroSteps, equiSteps);
+    double alpha_end = 0.9;    // final alpha parameter to test, the first is the alpha defined earlier
+    double alpha_step = 0.005;  // step length in alpha search
+    paramTester->alphaGrid(alpha, alpha_end, alpha_step);
+
+    double lrs[5] = {0.001, 0.01, 0.1, 0.2, 0.5};
+    for (int i = 0; i < 5; i++) {
+        paramTester = new ParamTester(system, "EnergyPerAlpha/EnergyPerLr" + to_string(i));
+        // Using gradient descent to find optimal alpha. Also prints results along the way.
+        metroSteps = (int) 2e4; // Number of metropolis steps
+        equiSteps = (int) 1e4;  // Amount of the total steps used for equilibration
+        system->setNumberOfSteps(metroSteps, equiSteps);
+        double lr = lrs[i];
+        double tol = 0.00000001;
+        double max_iter = 200;
+        double alpha_opt = paramTester->alphaGD(alpha, lr, tol, max_iter);
+    }
     return;
 }
 
@@ -139,7 +195,6 @@ void benchmark() {
         equiSteps = (int) 1e5;    // Amount of the total steps used for equilibration
         system->setNumberOfSteps(metroSteps, equiSteps);
         paramTester->bigCalc(alpha_opt);
-
     }
 }
 
@@ -191,7 +246,6 @@ void benchmarkDim() {
         equiSteps = (int) 1e5;    // Amount of the total steps used for equilibration
         system->setNumberOfSteps(metroSteps, equiSteps);
         paramTester->bigCalc(alpha_opt);
-
     }
 }
 
