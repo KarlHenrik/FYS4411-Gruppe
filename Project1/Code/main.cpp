@@ -20,7 +20,7 @@
 using namespace std;
 
 void testing();
-void energyPerAlpha();
+void energyPerAlpha(); // DONE!
 void corrResultat();
 void benchmark(); // DONE!
 void benchmarkDim(); // DONE!
@@ -28,8 +28,8 @@ void medUtenImp();
 void medUtenParallell();
 
 int main() {
-    //testing();
-    corrResultat();
+    testing();
+    //corrResultat();
     return 0;
 }
 
@@ -38,20 +38,20 @@ void testing() {
         // ----------------SYSTEM PARAMETERS---------------------
         // Physical system parameters
         int numberOfDimensions  = 3;
-        int numberOfParticles   = 2;
+        int numberOfParticles   = 3;
         double omega            = 1.0;       // Oscillator frequency
-        double alpha            = 0.497;       // Variational parameter, initial value
+        double alpha            = 0.5;       // Variational parameter, initial value
         double a                = 0.00433;     // Interaction radius
         double beta             = 1;   // Shift of trap in the z-direction
         // Metropolis parameters
         int metroSteps, equiSteps;           // Steps are specified down with the type of calculation
         bool ImpSampling        = 1;         // cout << "Perform importance sampling? [0,1] : "; cin >> ImpSampling;
         double stepLength       = 0.05;       // Metropolis step length used without importance sampling
-        double timestep         = 0.1;      // Time step used in importance sampling movement
+        double timestep         = 0.01;      // Time step used in importance sampling movement
         // Other parameters
         int seed                = 42;        // Seed for the random number generator. -1 means random seed
         int num_threads         = -1;        // Number of threads for calculation. -1 means max (automatic)
-        string systemName = "CorrEnergy";
+        string systemName = "CorrOB";
 
         // ---------------SYSTEM SETUP-----------------------
         System* system = new System(num_threads, seed);
@@ -64,28 +64,29 @@ void testing() {
 
         // -------------Calculations---------------------
         ParamTester* paramTester = new ParamTester(system, systemName);
-
-        // Doing grid search to produce plot of energy for each alpha
-        metroSteps = (int) 1e7; // Number of metropolis steps
-        equiSteps = (int) 1e6;  // Amount of the total steps used for equilibration
-        system->setNumberOfSteps(metroSteps, equiSteps);
-        double alpha_end = 0.498;    // final alpha parameter to test, the first is the alpha defined earlier
-        double alpha_step = 0.001;  // step length in alpha search
-        paramTester->alphaGrid(alpha, alpha_end, alpha_step);
         /*
+        // Doing grid search to produce plot of energy for each alpha
+        metroSteps = (int) 1e6; // Number of metropolis steps
+        equiSteps = (int) 1e5;  // Amount of the total steps used for equilibration
+        system->setNumberOfSteps(metroSteps, equiSteps);
+        double alpha_end = 0.4989;    // final alpha parameter to test, the first is the alpha defined earlier
+        double alpha_step = 0.0001;  // step length in alpha search
+        paramTester->alphaGrid(alpha, alpha_end, alpha_step);
+        */
         // Using gradient descent to find optimal alpha. Also prints results along the way.
         metroSteps = (int) 1e5; // Number of metropolis steps
         equiSteps = (int) 1e4;  // Amount of the total steps used for equilibration
         system->setNumberOfSteps(metroSteps, equiSteps);
-        double lr = 0.1;
+        double lr = 0.01;
         double tol = 0.0000001;
-        double max_iter = 20;
+        double max_iter = 200;
         double alpha_opt = paramTester->alphaGD(alpha, lr, tol, max_iter);
-
-        double alpha_opt = alpha;
+        /*
+        //double alpha_opt = 0.468;
+        double alpha_opt = 0.532;
         // Doing a large scale calculation for optimal alpha
         metroSteps = (int) 1e7; // Number of metropolis steps
-        equiSteps = (int) 1e6;    // Amount of the total steps used for equilibration
+        equiSteps = (int) 1e5;    // Amount of the total steps used for equilibration
         system->setNumberOfSteps(metroSteps, equiSteps);
         paramTester->bigCalc(alpha_opt);
         */
@@ -147,6 +148,8 @@ void energyPerAlpha() {
 }
 
 void corrResultat() {
+
+
     double numPart[1] = {5};
     for (int i = 0; i < 1; i++) {
         int numberOfParticles = numPart[i];
@@ -155,14 +158,14 @@ void corrResultat() {
         int numberOfDimensions  = 3;
         //int numberOfParticles   = 1;
         double omega            = 1.0;       // Oscillator frequency
-        double alpha            = 0.5;       // Initial guess taken from non-int case
+        double alpha            = 0.4;       // Initial guess taken from non-int case
         double a                = 0.00433;   // Interaction radius
         double beta             = 1.0;       // Shift of trap in the z-direction
         // Metropolis parameters
         int metroSteps, equiSteps;           // Steps are specified down with the type of calculation
         bool ImpSampling        = 1;         // cout << "Perform importance sampling? [0,1] : "; cin >> ImpSampling;
         double stepLength       = 0.1;       // Metropolis step length used without importance sampling
-        double timestep         = 0.1;     // Time step used in importance sampling movement
+        double timestep         = 0.01;     // Time step used in importance sampling movement
         // Other parameters
         vector<double> alphas(5, 0);
         for (int i = 0; i < alphas.size(); i++ ) {
@@ -314,6 +317,8 @@ void benchmarkDim() {
 }
 
 void medUtenImp() {
+
+
     return;
 }
 

@@ -73,7 +73,7 @@ void Correlated::computeDists(vector<Particle*> particles, int particle_idx, Par
 
         for (int d = 0; d < (int) particles[0]->getDims(); d++) {
             old_unit_vecs[thread][p1][p2][d] = unit_vecs[thread][p1][p2][d];
-            old_unit_vecs[thread][p2][p1][d] = -unit_vecs[thread][p2][p1][d];
+            old_unit_vecs[thread][p2][p1][d] = unit_vecs[thread][p2][p1][d];
             unit_vecs[thread][p1][p2][d] = (particles[p2]->getPosition().at(d) - p1Pos.at(d)) / interdistance;
             unit_vecs[thread][p2][p1][d] = -unit_vecs[thread][p1][p2][d];
         }
@@ -183,7 +183,6 @@ void Correlated::setup(vector<Particle*> particles, int thread) {
                     old_unit_vecs[thread][p1][p2][d] = unit_vecs[thread][p1][p2][d];
                 }
             }
-
         }
         old_dists[thread][p1][p1] = 1; // these should never appear in a non-zero expression!
         dists[thread][p1][p1] = 1; // the unit vectors should zero these out in all cases
@@ -216,7 +215,7 @@ double Correlated::computeDoubleDerivative(vector<class Particle*> particles, in
         }
         // Adding the vector products
         for (int d = 0; d < dims; d++) {
-            dblDer += -4 * alpha * particles[k]->getPosition().at(d) * ell.at(d) * vecSum.at(d);
+            dblDer += 4 * alpha * particles[k]->getPosition().at(d) * ell.at(d) * vecSum.at(d);
             dblDer += vecSum.at(d) * vecSum.at(d);
         }
         // Adding the final sum
@@ -229,31 +228,6 @@ double Correlated::computeDoubleDerivative(vector<class Particle*> particles, in
             dblDer += a * (a - 2 * dists[thread][k][p2]) / pow(a * dists[thread][k][p2] - r2, 2);
             dblDer += 2 / dists[thread][k][p2] * (-a) / (a * dists[thread][k][p2] - r2);
         }
-        /*
-        // Adding the final sum
-        for (int p2 = 0; p2 < k; p2++) {
-            r2 = dists[thread][k][p2] * dists[thread][k][p2];
-            dblDer += (a * a - 2 * a * dists[thread][k][p2]) / pow(r2 - a * dists[thread][k][p2], 2);
-            dblDer += a / (r2 * dists[thread][k][p2] - a * r2);
-        } for (int p2 = k + 1; p2 < (int) particles.size(); p2++) {
-            r2 = dists[thread][k][p2] * dists[thread][k][p2];
-            dblDer += (a * a - 2 * a * dists[thread][k][p2]) / pow(r2 - a * dists[thread][k][p2], 2);
-            dblDer += a / (r2 * dists[thread][k][p2] - a * r2);
-        }
-        */
     }
-    /*
-    if (abs(dblDer) > 2000) {
-        cout << "Found one" << endl;
-        cout << dblDer << endl;
-        for (int k = 0; k < (int) particles.size(); k++) {
-            for (int p2 = 0; p2 < (int) particles.size(); p2++) {
-                if (dists[thread][k][p2] < 10 * a) {
-                    cout << dists[thread][k][p2] << endl;
-                }
-            }
-        }
-    }
-    */
     return dblDer;
 }
