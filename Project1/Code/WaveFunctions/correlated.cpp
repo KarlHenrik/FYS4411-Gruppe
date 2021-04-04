@@ -222,6 +222,17 @@ double Correlated::computeDoubleDerivative(vector<class Particle*> particles, in
         // Adding the final sum
         for (int p2 = 0; p2 < k; p2++) {
             r2 = dists[thread][k][p2] * dists[thread][k][p2];
+            dblDer += a * (a - 2 * dists[thread][k][p2]) / pow(a * dists[thread][k][p2] - r2, 2);
+            dblDer += 2 / dists[thread][k][p2] * (-a) / (a * dists[thread][k][p2] - r2);
+        } for (int p2 = k + 1; p2 < (int) particles.size(); p2++) {
+            r2 = dists[thread][k][p2] * dists[thread][k][p2];
+            dblDer += a * (a - 2 * dists[thread][k][p2]) / pow(a * dists[thread][k][p2] - r2, 2);
+            dblDer += 2 / dists[thread][k][p2] * (-a) / (a * dists[thread][k][p2] - r2);
+        }
+        /*
+        // Adding the final sum
+        for (int p2 = 0; p2 < k; p2++) {
+            r2 = dists[thread][k][p2] * dists[thread][k][p2];
             dblDer += (a * a - 2 * a * dists[thread][k][p2]) / pow(r2 - a * dists[thread][k][p2], 2);
             dblDer += a / (r2 * dists[thread][k][p2] - a * r2);
         } for (int p2 = k + 1; p2 < (int) particles.size(); p2++) {
@@ -229,6 +240,20 @@ double Correlated::computeDoubleDerivative(vector<class Particle*> particles, in
             dblDer += (a * a - 2 * a * dists[thread][k][p2]) / pow(r2 - a * dists[thread][k][p2], 2);
             dblDer += a / (r2 * dists[thread][k][p2] - a * r2);
         }
+        */
     }
+    /*
+    if (abs(dblDer) > 2000) {
+        cout << "Found one" << endl;
+        cout << dblDer << endl;
+        for (int k = 0; k < (int) particles.size(); k++) {
+            for (int p2 = 0; p2 < (int) particles.size(); p2++) {
+                if (dists[thread][k][p2] < 10 * a) {
+                    cout << dists[thread][k][p2] << endl;
+                }
+            }
+        }
+    }
+    */
     return dblDer;
 }
