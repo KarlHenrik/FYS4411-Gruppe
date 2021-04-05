@@ -51,6 +51,6 @@ private:
     int m_paralellSize;
     vector<int> m_step;
     double m_max_rad = 4;
-    int m_bins = 80;
+    int m_bins = 50;
     string m_fileName;
 };
