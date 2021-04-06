@@ -1,8 +1,10 @@
 FYS4411 - Project 1 - A VMC solver for Studying Interacting Bosons Trapped In Oscillator Traps
 ================================================================================================
 
-The collaborators for this project has been:
+The collaborators for this project has been
+
 *Karl Henrik Fredly*
+
 *Brage Brevig*
 
 ## Obtainable Results
