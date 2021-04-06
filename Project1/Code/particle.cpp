@@ -17,7 +17,7 @@ void Particle::adjustPosition(double change, int dimension) { // adjust position
     updateLengthSq();
 }
 
-void Particle::adjustLangevin(std::vector<double> move) { // adjust position by a vector
+void Particle::adjustLangevin(vector<double> move) { // adjust position by a vector
     for (int i = 0; i < m_numberOfDimensions; i++) {
         m_position[i] += move[i];
     }

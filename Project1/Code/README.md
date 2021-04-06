@@ -1,59 +1,25 @@
-# Simple Variational Monte Carlo solve for FYS4411
+# FYS4411 VMC Code
 
-Example class structure for the first VMC project of FYS4411 (spring 2021). You may, if you wish, fork this repository and make it the basis of your project. If you choose to do this, you will have to implement a lot of the crucial functions yourself. The relevant functions you need to implement are spread throughout the project, but they are all commented with a note saying what each function should do.
+This VMC code is built on the code skeleton made by Morten Ledum: https://github.com/mortele/variational-monte-carlo-fys4411.
 
-Please note that this is only a start, and when you have implemented all of these functions you will only have completed the first exercise. However, once this is done, you will have a very good basis for further work, and adding functionality will be easier with a good class structure.
+The typical flow of the code is as follows:
 
-If you want to write your own code from scratch, you are of course welcome to do so, and feel free to use this code as inspiration for your own class structure.
+You run main(`./vmc`), where a VMC system is assembled. A `System` object is created, which then takes a `Hamiltionan`, `InitialState`, and `WaveFunction` object, and some more parameters for the system. Then, the `System` is handed to a `ParamTester` object, which "runs" the `System` for the correct values of the variational parameter alpha. By "running" the system, we mean running the metropolis algorithm, which is handeled entirely within the `System` class itself. From there it calls on functions from the objects it got in main to calculate the values it needs to perform the metropolis algorithm and sample various expected values. The sampling is handled by a `Sampler` object, which also returns the gradient to the `ParamTester`.
 
-- If you choose to use this code as a basis for your work, the first thing you should do is fork it, pull it down to your computer, and make sure it compiles and runs. See the next section on how to compile and run the project. After this you should spend at least 10 minutes looking at the structure and familiarizing yourself with how the classes interact with eachother. 
-- A good way to do this may be to simply start at the top of the main.cpp file, and go through all the calls to the System class functions. Consider also the base classes WaveFunction, Hamiltonian, and InitialState and see which functions are virtual (which functions NEED to be implemented by any sub-class).
-- You can skip over the output function in the Sampler class and the entire Random class.
+We have parallelized the metropolis algorithm using OpenMP. Each thread has its own vector of particles(whose position is what defines the state of the quantum system), but they share most other values. When a thread needs to store a value, we use vectors or arrays in shared objects like the `Sampler` or correlated wave function where each thread has its own index.
 
+Every time `ParamTester` "runs" the system, an output file is created in the folder "Output". `alphaGrid()` creates a file with the ending "_Grid" (a grid of alpha values and energies), `alphaGD()` makes the ending "_GD" (the alphas during gradient descent), and `bigCalc()` makes a file with the ending "_Big"(all energy samples from a large calculation) and "_oB"(the onebody density samples, which make a histogram). These files are read in the various Jupyter Notebooks in the folder "Notebooks". Utility functions from the file "customRead.py" are used to extract results from the files easily.
 
-## Compiling and running the project
-There are now several options you can use for compiling the project. If you use QT Creator, you can import this project into the IDE and point it to the `.pro`-file. If not, you can use CMake to create a Makefile for you which you can then run. You can install CMake through one of the Linux package managers, e.g., `apt install cmake`, `pacman -S cmake`, etc. For Mac you can install using `brew install cmake`. Other ways of installing are shown here: [https://cmake.org/install/](https://cmake.org/install/).
+Currently, when you run main, only a small demo calculation is run. To reproduce our results, you must call one of the many other functions defined in main.
 
 ### Compiling the project using CMake
-In a Linux/Mac terminal this can be done by the following commands
-```bash
-# Create build-directory
-mkdir build
+Run the script compile_project via `./compile_project`. Now the project can be run by executing `./vmc` in the top-directory.
 
-# Move into the build-directory
-cd build
-
-# Run CMake to create a Makefile
-cmake ../
-
-# Make the Makefile using two threads
-make -j2
-
-# Move the executable to the top-directory
-mv vmc ..
-```
-Or, simply run the script `compile_project` via
-```bash
-./compile_project
-```
-and the same set of commands are done for you. Now the project can be run by executing
-```bash
-./vmc
-```
-in the top-directory.
+### Unit tests
+We have written unit tests in the folder UnitTests. The code there can be compiled, run and cleaned in the same way as in the top-directory. Simply run the script compile_project via `./compile_project` in the folder UnitTests. Then you can run the tests by executing `./unitTests`.
 
 #### Cleaning the directory
 Run `make clean` in the top-directory to remove the executable `vmc` and the `build`-directory.
 
 #### Windows
-Compilation of the project using Windows is still an open question to me, but please include a pull-request if you've got an example. CMake should be OS-independent, but `make` does not work on Windows.
-
-## Completing the missing parts ##
-Here follows a suggestion for how you can work to complete the missing parts of the code:
-- Start by implementing the Gaussian wave function: Write the evaluate function. Assume for now that the number of particles is always one, and the number of dimensions is always 1. Next, compute the Laplacian analytically, and implement the double derivative function.
-- Secondly, use the Random class (or your own favorite random number generator, should you have one) to implement the missing part of the setupInitialState part of the RandomUniform class. Note that this should be pretty straight forward and simple.
-- Next, implement the metropolisStep function in the System class. Implement also the small missing part of the runMetropolisSteps function.
-- Now, the last big thing needed is to implement the energy calculation. This is done by the Hamiltonian sub-class HarmonicOscillator. Here you will have to use the Laplacian you calculated for the wave function earlier.
-- Now the code should be functioning and you should see (somewhat) reasonable results. Try to set the oscillator frequency to 1 and calculate analytically the energy of the oscillator. Recall the form of the ground state wave function of the harmonic oscillator, and set the parameter alpha accordingly. What is the resulting energy?
-- If this energy is NOT correct, the last bit missing is to take a look at the computeAverages function in the Sampler class. What is missing here?
-
+Compilation of the project using Windows is still an open question to us. CMake should be OS-independent, but `make` does not work on Windows.

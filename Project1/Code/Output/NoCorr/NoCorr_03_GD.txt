@@ -1,0 +1,20 @@
+  -- System info -- 
+ Number of particles  : 3
+ Number of dimensions : 3
+ Number of Metropolis steps run : 10^4.99998
+ Number of equilibration steps  : 10^4
+ Number of parameters : 1
+
+  -- Results -- 
+ Param_1        E              E^2            VAR            % Accepted Transitions
+ 0.4            4.66412        22.0216        0.267535       0.975849       
+ 0.499087       4.49982        20.2484        1.52521e-05    0.970609       
+ 0.499645       4.50016        20.2514        2.68698e-06    0.970399       
+ 0.499897       4.49999        20.2499        2.00995e-07    0.970389       
+ 0.499962       4.5            20.25          2.80852e-08    0.971419       
+ 0.499986       4.5            20.25          3.57383e-09    0.969789       
+ 0.499994       4.5            20.25          6.10854e-10    0.971799       
+ 0.499998       4.5            20.25          7.43192e-11    0.971049       
+ 0.499999       4.5            20.25          9.74865e-12    0.971079       
+Execution time: 1.601592
+
