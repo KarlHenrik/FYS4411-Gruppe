@@ -34,7 +34,7 @@ void lameEll(); // DONE!
 void loopinteraction(); // DONE!
 
 int main() {
-    demo();
+    loopinteraction();
     return 0;
 }
 
@@ -692,45 +692,45 @@ void benchmarkDim() {
 }
 // shell radius plot
 void loopinteraction() {
-      cout << "Running iterative simulation with different hard shell diameters 'a'." << endl;
-      // ----------------SYSTEM PARAMETERS---------------------
-      // Physical system parameters
-      int numberOfDimensions  = 3;
-      int numberOfParticles   = 5;
-      double omega            = 1.0;       // Oscillator frequency
-      double alpha            = 0.5;       // Initial guess taken from non-int case
-      double beta             = 1.;       // Shift of trap in the z-direction
-      // Metropolis parameters
-      int metroSteps, equiSteps;           // Steps are specified down with the type of calculation
-      bool ImpSampling        = 1;         // cout << "Perform importance sampling? [0,1] : "; cin >> ImpSampling;
-      double stepLength       = 0.1;       // Metropolis step length used without importance sampling
-      double timestep         = 0.01;     // Time step used in importance sampling movement
-      // Other parameters
-      double a_vals[3] = {0.0 , 0.00443, 0.443};
-      for (int i = 0; i < 3; i++ ) {
-          int seed                = i;        // Seed for the random number generator. -1 means random seed
-          int num_threads         = -1;        // Number of threads for calculation. -1 means max (automatic)
-          string systemName = "Different_a_vals/a_loop_finaltry" + to_string(a_vals[i]);
+    cout << "Running iterative simulation with different hard shell radii 'a'." << endl;
+    // ----------------SYSTEM PARAMETERS---------------------
+    // Physical system parameters
+    int numberOfDimensions  = 3;
+    int numberOfParticles   = 5;
+    double omega            = 1.0;       // Oscillator frequency
+    double alpha            = 0.5;       // Initial guess taken from non-int case
+    double beta             = 1.;       // Shift of trap in the z-direction
+    // Metropolis parameters
+    int metroSteps, equiSteps;           // Steps are specified down with the type of calculation
+    bool ImpSampling        = 1;         // cout << "Perform importance sampling? [0,1] : "; cin >> ImpSampling;
+    double stepLength       = 0.1;       // Metropolis step length used without importance sampling
+    double timestep         = 0.01;     // Time step used in importance sampling movement
+    // Other parameters
+    double alpha_vals[3] = {0.5, 0.498944, 0.484810}; // found from other calculation
+    double a_vals[3] = {0.0 , 0.00443, 0.0443};
+    for (int i = 0; i < 3; i++ ) {
+        int seed                = i;        // Seed for the random number generator. -1 means random seed
+        int num_threads         = -1;        // Number of threads for calculation. -1 means max (automatic)
+        string systemName = "Different_a_vals/a_loop_finaltry" + to_string(a_vals[i]);
 
-          // ---------------SYSTEM SETUP-----------------------
-          System* system = new System(num_threads, seed);
-          system->setHamiltonian    (new HarmonicOscillator(system, omega, beta));
-          system->setWaveFunction   (new Correlated(system, alpha, a_vals[i], beta));
-          system->setInitialState   (new RandomUniform(system, numberOfDimensions, numberOfParticles, a_vals[i]));
-          system->setStepLength     (stepLength);
-          system->setTimeStep       (timestep);
-          system->setChoice         (ImpSampling);
+        // ---------------SYSTEM SETUP-----------------------
+        System* system = new System(num_threads, seed);
+        system->setHamiltonian    (new HarmonicOscillator(system, omega, beta));
+        system->setWaveFunction   (new Correlated(system, alpha, a_vals[i], beta));
+        system->setInitialState   (new RandomUniform(system, numberOfDimensions, numberOfParticles, a_vals[i]));
+        system->setStepLength     (stepLength);
+        system->setTimeStep       (timestep);
+        system->setChoice         (ImpSampling);
 
-          // -------------Calculations---------------------
-          ParamTester* paramTester = new ParamTester(system, systemName);
+        // -------------Calculations---------------------
+        ParamTester* paramTester = new ParamTester(system, systemName);
 
-          // Doing a large scale calculation for optimal alpha
-          metroSteps = (int) 1e7; // Number of metropolis steps
-          equiSteps = (int) 1e6;    // Amount of the total steps used for equilibration
-          system->setNumberOfSteps(metroSteps, equiSteps);
-          paramTester->bigCalc(0.498944);
-
-  }
+        // Doing a large scale calculation for optimal alpha
+        metroSteps = (int) 1e7; // Number of metropolis steps
+        equiSteps = (int) 1e6;    // Amount of the total steps used for equilibration
+        system->setNumberOfSteps(metroSteps, equiSteps);
+        paramTester->bigCalc(alpha_vals[i]);
+    }
 }
 // with/without importance table
 void medUtenImp() {
