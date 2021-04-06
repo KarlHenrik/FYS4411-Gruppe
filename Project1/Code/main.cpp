@@ -34,7 +34,7 @@ void lameEll(); // DONE!
 void loopinteraction(); // DONE!
 
 int main() {
-    loopinteraction();
+    demo();
     return 0;
 }
 
